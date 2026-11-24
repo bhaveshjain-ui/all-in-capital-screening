@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CalError } from "@/lib/calendar/cal";
 import { draftInvitation, EmailStateError } from "@/lib/email/draft";
 import { InvalidModelOutputError, MissingConfigError } from "@/lib/llm";
 import { getLlm } from "@/lib/llm/gemini";
@@ -35,6 +36,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof EmailStateError) return NextResponse.json({ error: e.message }, { status: 409 });
+    if (e instanceof CalError) return NextResponse.json({ error: e.message }, { status: 502 });
     const message = e instanceof InvalidModelOutputError ? e.message : `Drafting failed: ${(e as Error).message}`;
     return NextResponse.json({ error: message }, { status: 502 });
   }

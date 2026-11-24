@@ -27,6 +27,12 @@ function clock(h: number, m: number) {
   return `${hh}:${String(m).padStart(2, "0")} ${suffix}`;
 }
 
+/** "Thursday 26 November, 2:00 pm IST" for a UTC instant. */
+export function formatSlotLabel(startIso: string): string {
+  const d = new Date(Date.parse(startIso) + IST_OFFSET_MINUTES * 60_000);
+  return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}, ${clock(d.getUTCHours(), d.getUTCMinutes())} IST`;
+}
+
 /** The next slots on Tuesdays and Thursdays, in IST, starting LEAD_DAYS after `from`. */
 export function proposeSlots(from: Date, count = 4): Slot[] {
   const slots: Slot[] = [];

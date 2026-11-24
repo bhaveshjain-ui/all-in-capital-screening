@@ -298,7 +298,7 @@ export interface AuditEntry {
   type:
     | "extraction_run" | "research_planned" | "scoring_run" | "business_types_changed"
     | "criterion_accepted" | "criterion_corrected" | "decision_recorded" | "review_archived"
-    | "email_drafted" | "email_edited" | "email_approved" | "email_sent" | "email_failed" | "settings_applied";
+    | "email_drafted" | "email_edited" | "email_approved" | "email_sent" | "email_failed" | "booking_created" | "booking_failed" | "settings_applied";
   /** "system" or the name the reviewer typed (there is no login, so this is self-declared). */
   by: string;
   detail: string;
@@ -341,6 +341,10 @@ export interface EmailDraft {
   mode?: "test" | "live";
   resendId?: string | null;
   error?: string;
+  /** Where the offered slots came from. */
+  slotSource?: "cal.com" | "fixed rule";
+  /** Set once a reviewer books the time the applicant chose. "test" means no calendar entry was made. */
+  booking?: { startIso: string; label: string; mode: "test" | "live"; uid: string | null; by: string; at: string; eventTypeId?: number };
 }
 
 export interface StoredFile {

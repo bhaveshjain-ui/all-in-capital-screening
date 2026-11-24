@@ -10,7 +10,9 @@ export interface DraftView {
   to: string;
   subject: string;
   body: string;
-  slots: { label: string }[];
+  slots: { label: string; startIso: string }[];
+  slotSource?: "cal.com" | "fixed rule";
+  booking?: { label: string; mode: "test" | "live"; by: string; at: string };
   attendees: string[];
   model: string;
   createdAt: string;
@@ -63,6 +65,7 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
   const save = () => run(() => call(`/api/applications/${appId}/email/${d.id}`, "PATCH", { to, subject, body, by }));
   const approve = () => run(() => call(`/api/applications/${appId}/email/${d.id}/approve`, "POST", { by }));
   const send = () => run(() => call(`/api/applications/${appId}/email/${d.id}/send`, "POST", { by }));
+  const book = (startIso: string) => run(() => call(`/api/applications/${appId}/email/${d.id}/book`, "POST", { by, startIso }));
 
   return (
     <div className="card form email-card">
@@ -82,11 +85,27 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
         <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={frozen} rows={12} maxLength={4000} />
       </label>
       <p className="small muted">
-        Slots offered: {d.slots.map((s) => s.label).join("; ")}. These come from the Tuesday/Thursday afternoon rule and do not check anyone&apos;s calendar: confirm availability before sending.
+        Slots offered: {d.slots.map((s) => s.label).join("; ")}.{" "}
+        {d.slotSource === "cal.com"
+          ? "These were free on Cal.com when the invitation was drafted (Tuesday or Thursday afternoons). Check them again if some time has passed."
+          : "These come from the fixed Tuesday/Thursday afternoon rule and do not check anyone's calendar: confirm availability before sending."}
       </p>
       {d.status === "approved" && <p className="small">Approved by {d.approvedBy} at {new Date(d.approvedAt!).toLocaleString("en-IN")}. Editing the text cancels the approval.</p>}
       {frozen && <p className="small">{d.status === "sent" ? "Sent" : "Recorded in test mode"} at {new Date(d.sentAt!).toLocaleString("en-IN")}.</p>}
       {d.status === "failed" && <p className="error small" role="alert">The last send failed: {d.error}</p>}
+      {frozen && !d.booking && (
+        <div>
+          <p className="small">When the applicant replies with a time, book it here. {mode === "live" ? "This creates a Cal.com booking and Cal.com emails the applicant a calendar invite." : "Test mode: nothing is booked; it only records the choice."}</p>
+          <div className="row-actions">
+            {d.slots.map((s) => (
+              <button key={s.startIso} type="button" className="secondary" disabled={busy} onClick={() => { if (mode === "test" || window.confirm(`Book ${s.label} and email the applicant a calendar invite?`)) book(s.startIso); }}>
+                Book {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {d.booking && <p className="small">{d.booking.mode === "live" ? "Booked" : "Recorded in test mode (no calendar entry)"}: {d.booking.label}, by {d.booking.by} at {new Date(d.booking.at).toLocaleString("en-IN")}.</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {!frozen && (
         <div className="row-actions">
