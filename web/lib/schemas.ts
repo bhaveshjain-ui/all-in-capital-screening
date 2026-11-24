@@ -309,7 +309,14 @@ export interface AuditEntry {
 export const EmailDraftOutputSchema = z.object({
   subject: z.string().min(3).max(150),
   body: z.string().min(40).max(2500),
+  /** The one company-specific sentence in the body, and the exact words from the application it rests on. */
+  personal_detail: z.object({
+    sentence: z.string().min(15).max(300),
+    quote: z.string().min(12).max(300),
+    source: z.enum(["deck", "form"]),
+  }),
 });
+export type EmailPersonalDetail = z.infer<typeof EmailDraftOutputSchema>["personal_detail"];
 
 const noBreak = (s: string) => !s.includes(String.fromCharCode(10)) && !s.includes(String.fromCharCode(13));
 
@@ -341,6 +348,8 @@ export interface EmailDraft {
   mode?: "test" | "live";
   resendId?: string | null;
   error?: string;
+  /** What makes the draft specific to this company, with the application text it was based on. Older drafts have none. */
+  personalisation?: { sentence: string; quote: string; source: "deck" | "form" };
   /** How many model attempts passed the code checks (1 = first try). Older drafts have none. */
   attempts?: number;
   /** Where the offered slots came from. */

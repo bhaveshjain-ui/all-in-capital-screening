@@ -12,6 +12,7 @@ export interface DraftView {
   body: string;
   slots: { label: string; startIso: string }[];
   slotSource?: "cal.com" | "fixed rule";
+  personalisation?: { sentence: string; quote: string; source: "deck" | "form" };
   booking?: { label: string; mode: "test" | "live"; by: string; at: string };
   attendees: string[];
   model: string;
@@ -90,6 +91,11 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
           ? "These were free on Cal.com when the invitation was drafted (Tuesday or Thursday afternoons). Check them again if some time has passed."
           : "These come from the fixed Tuesday/Thursday afternoon rule and do not check anyone's calendar: confirm availability before sending."}
       </p>
+      {d.personalisation && (
+        <p className="small muted">
+          Specific to this company: &ldquo;{d.personalisation.sentence}&rdquo; Based on the applicant&apos;s {d.personalisation.source}: &ldquo;{d.personalisation.quote}&rdquo; (checked against the document). Edit it if it is not right.
+        </p>
+      )}
       {d.status === "approved" && <p className="small">Approved by {d.approvedBy} at {new Date(d.approvedAt!).toLocaleString("en-IN")}. Editing the text cancels the approval.</p>}
       {frozen && <p className="small">{d.status === "sent" ? "Sent" : "Recorded in test mode"} at {new Date(d.sentAt!).toLocaleString("en-IN")}.</p>}
       {d.status === "failed" && <p className="error small" role="alert">The last send failed: {d.error}</p>}

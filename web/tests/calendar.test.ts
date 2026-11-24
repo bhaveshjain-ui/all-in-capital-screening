@@ -97,7 +97,7 @@ describe("choosing slots for an invitation", () => {
 async function takeACallApp(): Promise<Application> {
   const app: Application = {
     id: "11111111-2222-3333-4444-555555555555", name: "Demo Co", createdAt: new Date().toISOString(),
-    files: [{ kind: "deck", filename: "d.pdf", pages: 1, text: "Traction: INR 16.5 L in October." }],
+    files: [{ kind: "deck", filename: "d.pdf", pages: 1, text: "Traction: INR 16.5 L in October. GrainKind makes millet-based breakfast and snacks for urban families." }],
     extraction: {
       status: "done", model: "fixture", extractedAt: new Date().toISOString(),
       result: { company: { name: "Demo Co", one_liner: "Millet snacks", founders: [{ name: "Ritu" }, { name: "Sanjay" }] }, claims: [], figures: { products: [], sums: [], quotients: [], paybacks: [] } },
@@ -126,7 +126,7 @@ describe("drafting with Cal.com slots", () => {
     const llm: Llm = {
       model: "fixture",
       async json<T>(_p: string, schema: ZodType<T>) {
-        return schema.parse({ subject: "A conversation with All In Capital", body: `Hello Ritu,${NL}${NL}We would like a 30-minute conversation.${NL}${NL}${slots.map((s) => `- ${s.label}`).join(NL)}${NL}${NL}The All In Capital team` });
+        return schema.parse({ subject: "A conversation with All In Capital", body: `Hello Ritu,${NL}${NL}We read that you make millet-based breakfast and snacks for urban families. We would like a 30-minute conversation.${NL}${NL}${slots.map((s) => `- ${s.label}`).join(NL)}${NL}${NL}The All In Capital team`, personal_detail: { sentence: "We read that you make millet-based breakfast and snacks for urban families.", quote: "makes millet-based breakfast and snacks for urban families", source: "deck" } });
       },
     };
     const out = await draftInvitation(await takeACallApp(), llm, "Riya", NOW, async () => slots);

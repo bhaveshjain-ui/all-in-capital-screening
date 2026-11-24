@@ -390,7 +390,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                   canInvite={app.review?.decision?.value === "Take a call"}
                   drafts={(app.emails ?? []).map((d) => ({
                     id: d.id, status: d.status, to: d.to, subject: d.subject, body: d.body,
-                    slots: d.slots.map((s) => ({ label: s.label, startIso: s.startIso })), slotSource: d.slotSource, booking: d.booking ? { label: d.booking.label, mode: d.booking.mode, by: d.booking.by, at: d.booking.at } : undefined, attendees: d.attendees, model: d.model,
+                    slots: d.slots.map((s) => ({ label: s.label, startIso: s.startIso })), slotSource: d.slotSource, personalisation: d.personalisation, booking: d.booking ? { label: d.booking.label, mode: d.booking.mode, by: d.booking.by, at: d.booking.at } : undefined, attendees: d.attendees, model: d.model,
                     createdAt: d.createdAt, approvedBy: d.approvedBy, approvedAt: d.approvedAt,
                     sentAt: d.sentAt, mode: d.mode, error: d.error,
                   }))}

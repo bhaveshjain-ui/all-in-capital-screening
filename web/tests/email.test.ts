@@ -3,7 +3,7 @@ import type { ZodType } from "zod";
 import { CRITERIA, type BusinessType } from "../lib/framework/config";
 import { InvalidModelOutputError, MissingConfigError, type Llm } from "../lib/llm";
 import { attendeesFor, checkRecipient, proposeSlots } from "../lib/email/slots";
-import { draftInvitation, EmailStateError, validateDraft } from "../lib/email/draft";
+import { checkPersonalisation, draftInvitation, EmailStateError, validateDraft } from "../lib/email/draft";
 import {
   approveDraft, DAILY_LIVE_SEND_CAP, editDraft, getSender, hashDraft, LIVE_SENDS_PER_APPLICATION,
   sendDraft, sendMode, type OutgoingMessage, type Sender,
@@ -56,7 +56,7 @@ describe("recipient checks", () => {
 async function takeACallApp(types: BusinessType[] = ["consumer"]): Promise<Application> {
   const app: Application = {
     id: "11111111-2222-3333-4444-555555555555", name: "Demo Co", createdAt: new Date().toISOString(),
-    files: [{ kind: "deck", filename: "d.pdf", pages: 1, text: "Traction: INR 16.5 L in October." }],
+    files: [{ kind: "deck", filename: "d.pdf", pages: 1, text: "Traction: INR 16.5 L in October. GrainKind makes millet-based breakfast and snacks for urban families." }],
     extraction: {
       status: "done", model: "fixture", extractedAt: new Date().toISOString(),
       result: { company: { name: "Demo Co", one_liner: "Millet snacks", founders: [{ name: "Ritu" }, { name: "Sanjay" }] }, claims: [], figures: { products: [], sums: [], quotients: [], paybacks: [] } },
@@ -75,7 +75,7 @@ async function takeACallApp(types: BusinessType[] = ["consumer"]): Promise<Appli
 }
 
 const goodBody = (slots: { label: string }[]) =>
-  `Hello Ritu and Sanjay,${NL}${NL}Thank you for applying to All In Capital. We would like to set up a 30-minute conversation with Kushal.${NL}${NL}${slots.map((s) => `- ${s.label}`).join(NL)}${NL}${NL}Please reply with the slot that suits you, or suggest another time.${NL}${NL}The All In Capital team`;
+  `Hello Ritu and Sanjay,${NL}${NL}Thank you for applying to All In Capital. We read that you make millet-based breakfast and snacks for urban families. We would like to set up a 30-minute conversation with Kushal.${NL}${NL}${slots.map((s) => `- ${s.label}`).join(NL)}${NL}${NL}Please reply with the slot that suits you, or suggest another time.${NL}${NL}The All In Capital team`;
 
 function draftLlm(bodies: ((slots: { label: string }[]) => string)[], subject = "A conversation with All In Capital") {
   const seen: string[] = [];
@@ -85,7 +85,7 @@ function draftLlm(bodies: ((slots: { label: string }[]) => string)[], subject = 
     async json<T>(prompt: string, schema: ZodType<T>) {
       seen.push(prompt);
       const make = bodies.shift()!;
-      const r = schema.safeParse({ subject, body: make(slots) });
+      const r = schema.safeParse({ subject, body: make(slots), personal_detail: { sentence: "We read that you make millet-based breakfast and snacks for urban families.", quote: "makes millet-based breakfast and snacks for urban families", source: "deck" } });
       if (!r.success) throw new InvalidModelOutputError("bad shape");
       return r.data;
     },
@@ -252,5 +252,50 @@ describe("sending", () => {
     const spy = spySender();
     await expect(sendDraft(withEarlier, id, "Riya", { mode: "live", sender: spy.sender, from: "a@b.in", allApps: [withEarlier], now: NOW })).rejects.toThrow(/last 24 hours/);
     expect(spy.sent).toHaveLength(0);
+  });
+});
+
+describe("drafting is specific to the company, and checked", () => {
+  const detail = { sentence: "We read that you make millet-based breakfast and snacks for urban families.", quote: "makes millet-based breakfast and snacks for urban families", source: "deck" as const };
+  it("accepts a sentence that is in the body and rests on words really in the application", async () => {
+    const app = await takeACallApp();
+    expect(checkPersonalisation(goodBody(proposeSlots(NOW)), app, detail)).toEqual([]);
+  });
+  it("rejects a quote that is not in the applicant's document", async () => {
+    const app = await takeACallApp();
+    const p = checkPersonalisation(goodBody(proposeSlots(NOW)), app, { ...detail, quote: "builds satellites for ocean monitoring" });
+    expect(p.join()).toMatch(/not found there/);
+    expect(checkPersonalisation(goodBody(proposeSlots(NOW)), app, { ...detail, source: "form" }).join()).toMatch(/not found there/);
+  });
+  it("rejects a sentence that is not in the body, or that has numbers", async () => {
+    const app = await takeACallApp();
+    expect(checkPersonalisation("Hello. No such sentence here at all, just a plain message.", app, detail).join()).toMatch(/copied exactly/);
+    const withNumber = { ...detail, sentence: "We read that you serve 40000 households." };
+    expect(checkPersonalisation("We read that you serve 40000 households.", app, withNumber).join()).toMatch(/no numbers/);
+  });
+  it("rejects praise and quoted figures anywhere in the email", () => {
+    const slots = proposeSlots(NOW);
+    expect(validateDraft("Hi", goodBody(slots) + " Your traction is impressive.", slots).join()).toMatch(/praise/i);
+    expect(validateDraft("Hi", goodBody(slots) + " You reached INR 16.5 L in October.", slots).join()).toMatch(/figure/);
+    expect(validateDraft("Hi", goodBody(slots) + " Margins of 48% are notable.", slots).join()).toMatch(/figure/);
+  });
+  it("does not mistake the slot times or '30-minute' for figures", () => {
+    const slots = proposeSlots(NOW);
+    expect(validateDraft("Hi", goodBody(slots), slots)).toEqual([]);
+  });
+  it("stores what the draft was based on, and retries when the quote is wrong", async () => {
+    const bad = { sentence: detail.sentence, quote: "a quote that is nowhere in the deck", source: "deck" as const };
+    let n = 0;
+    const llm: Llm = {
+      model: "fixture",
+      async json<T>(_p: string, schema: ZodType<T>) {
+        const slots = proposeSlots(NOW);
+        return schema.parse({ subject: "A conversation with All In Capital", body: goodBody(slots), personal_detail: n++ === 0 ? bad : detail });
+      },
+    };
+    const out = await draftInvitation(await takeACallApp(), llm, "Riya", NOW);
+    expect(n).toBe(2);
+    expect(out.emails![0].attempts).toBe(2);
+    expect(out.emails![0].personalisation).toEqual(detail);
   });
 });
