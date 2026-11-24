@@ -2,6 +2,7 @@ import { CRITERIA } from "@/lib/framework/config";
 import { currentValues, FRAMEWORK_DEFAULTS } from "@/lib/settings";
 import { savedSettings } from "@/lib/store";
 import SettingsForm from "./settings-form";
+import { fmtDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function SettingsPage() {
             <tbody>
               {history.map((h) => (
                 <tr key={h.id}>
-                  <td>{new Date(h.at).toLocaleString("en-IN")}</td>
+                  <td>{fmtDateTime(h.at)}</td>
                   <td>{h.by}</td>
                   <td>{h.reason}</td>
                   <td><ul className="small">{h.changes.map((c, i) => <li key={i}>{c}</li>)}</ul></td>

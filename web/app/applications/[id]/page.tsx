@@ -11,6 +11,7 @@ import { memoryFor, toView } from "@/lib/memory";
 import { sendMode } from "@/lib/email/send";
 import EmailPanel from "./email-panel";
 import { CriterionReview, DecisionForm, ReviewerName } from "./review-controls";
+import { fmtDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
     <>
       <p className="small"><Link href="/applications">← All applications</Link></p>
       <h1>{app.name}</h1>
-      <p className="muted">Added {new Date(app.createdAt).toLocaleString("en-IN")}</p>
+      <p className="muted">Added {fmtDateTime(app.createdAt)}</p>
 
       <h2>Files read</h2>
       <div className="table-wrap">
@@ -71,7 +72,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
       )}
       {ex.status === "error" && <p className="error" role="alert">Last run failed: {ex.error}</p>}
       {ex.status === "done" && (
-        <p className="muted">Extracted {new Date(ex.extractedAt!).toLocaleString("en-IN")} with {ex.model}. Review the quotes: the model reads, it does not judge.</p>
+        <p className="muted">Extracted {fmtDateTime(ex.extractedAt!)} with {ex.model}. Review the quotes: the model reads, it does not judge.</p>
       )}
       <ExtractButton id={app.id} done={ex.status === "done"} />
 
@@ -174,7 +175,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
           {app.research && (
             <>
               <p className="muted small">
-                Planned {new Date(app.research.plannedAt!).toLocaleString("en-IN")} with {app.research.model}.{" "}
+                Planned {fmtDateTime(app.research.plannedAt!)} with {app.research.model}.{" "}
                 {app.research.completed.length} of {app.research.questions.length} questions answered.
               </p>
 
@@ -374,7 +375,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                 </p>
                 {app.review?.decision && (
                   <div className="notice">
-                    Recorded: <strong>{app.review.decision.value}</strong> by {app.review.decision.by}, {new Date(app.review.decision.at).toLocaleString("en-IN")}
+                    Recorded: <strong>{app.review.decision.value}</strong> by {app.review.decision.by}, {fmtDateTime(app.review.decision.at)}
                     {app.review.decision.agreedWithSystem ? " (agrees with the system)" : ` (the system suggested: ${app.review.decision.systemLean})`}. {app.review.decision.reason}
                   </div>
                 )}
@@ -402,7 +403,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                 ) : (
                   <ul className="small audit">
                     {[...(app.audit ?? [])].reverse().map((a, i) => (
-                      <li key={i}><span className="muted">{new Date(a.at).toLocaleString("en-IN")}</span> · {a.by} · {a.detail}</li>
+                      <li key={i}><span className="muted">{fmtDateTime(a.at)}</span> · {a.by} · {a.detail}</li>
                     ))}
                   </ul>
                 )}
@@ -413,7 +414,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                   </p>
                 )}
                 <p className="small muted">
-                  Scored {new Date(sc.scoredAt).toLocaleString("en-IN")} with {sc.model} ({sc.attempts} attempt{sc.attempts > 1 ? "s" : ""}). Thresholds used: take a call at {sc.paramsUsed.takeThreshold}+, pass at {sc.paramsUsed.passThreshold} or below, coverage at least {sc.paramsUsed.coverageMin}%.
+                  Scored {fmtDateTime(sc.scoredAt)} with {sc.model} ({sc.attempts} attempt{sc.attempts > 1 ? "s" : ""}). Thresholds used: take a call at {sc.paramsUsed.takeThreshold}+, pass at {sc.paramsUsed.passThreshold} or below, coverage at least {sc.paramsUsed.coverageMin}%.
                 </p>
               </>
             );

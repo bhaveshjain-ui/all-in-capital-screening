@@ -5,6 +5,7 @@ import {
 import { feedbackLoop, measureAll, STEPS, statusOf } from "@/lib/evals/steps";
 import { currentValues, type SettingsValues } from "@/lib/settings";
 import { allApplications, savedSettings } from "@/lib/store";
+import { fmtDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -194,7 +195,7 @@ export default async function EvaluationPage({ searchParams }: { searchParams: P
             <thead><tr><th>Application</th><th>Reviewer&apos;s decision</th><th>System suggested</th><th>By</th><th>When</th></tr></thead>
             <tbody>
               {live.rows.map((r, i) => (
-                <tr key={i}><td>{r.name}</td><td>{r.decision}</td><td className={r.agreed ? "" : "bad"}>{r.systemLean}{r.agreed ? "" : " (differs)"}</td><td>{r.by}</td><td>{new Date(r.at).toLocaleString("en-IN")}</td></tr>
+                <tr key={i}><td>{r.name}</td><td>{r.decision}</td><td className={r.agreed ? "" : "bad"}>{r.systemLean}{r.agreed ? "" : " (differs)"}</td><td>{r.by}</td><td>{fmtDateTime(r.at)}</td></tr>
               ))}
             </tbody>
           </table>

@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { fmtDate } from "@/lib/time";
 
 interface Current {
   status: "scored" | "stated_absence" | "unknown" | "na";
@@ -101,7 +102,7 @@ export function CriterionReview({
           <p className="small muted">Precedent, not a rule: the evidence in this application decides.</p>
           {memory.map((m, i) => (
             <div key={i} className="memory-item small">
-              <strong>{m.company}</strong>: {m.original} → {m.corrected} ({m.by}, {new Date(m.at).toLocaleDateString("en-IN")})
+              <strong>{m.company}</strong>: {m.original} → {m.corrected} ({m.by}, {fmtDate(m.at)})
               <div>{m.reason}</div>
               <div className="muted">Similar because: {m.reasons.join("; ")}</div>
             </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getStore, storeProblem } from "@/lib/store";
 import UploadForm from "./upload-form";
+import { fmtDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +50,7 @@ export default async function ApplicationsPage() {
                   <td>{STATUS[a.extractionStatus]}</td>
                   <td className="num">{a.extractionStatus === "done" ? a.conflicts : "–"}</td>
                   <td className="num">{a.extractionStatus === "done" ? a.mismatches : "–"}</td>
-                  <td>{new Date(a.createdAt).toLocaleString("en-IN")}</td>
+                  <td>{fmtDateTime(a.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

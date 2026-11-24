@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useReviewerName } from "./review-controls";
+import { fmtDateTime } from "@/lib/time";
 
 export interface DraftView {
   id: string;
@@ -71,7 +72,7 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
   return (
     <div className="card form email-card">
       <div className="small muted">
-        {STATUS[d.status]} · drafted {new Date(d.createdAt).toLocaleString("en-IN")} with {d.model} · on the call: {d.attendees.join(" and ")}
+        {STATUS[d.status]} · drafted {fmtDateTime(d.createdAt)} with {d.model} · on the call: {d.attendees.join(" and ")}
       </div>
       <label>
         To (one address; type the applicant&apos;s email, none was given)
@@ -96,8 +97,8 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
           Specific to this company: &ldquo;{d.personalisation.sentence}&rdquo; Based on the applicant&apos;s {d.personalisation.source}: &ldquo;{d.personalisation.quote}&rdquo; (checked against the document). Edit it if it is not right.
         </p>
       )}
-      {d.status === "approved" && <p className="small">Approved by {d.approvedBy} at {new Date(d.approvedAt!).toLocaleString("en-IN")}. Editing the text cancels the approval.</p>}
-      {frozen && <p className="small">{d.status === "sent" ? "Sent" : "Recorded in test mode"} at {new Date(d.sentAt!).toLocaleString("en-IN")}.</p>}
+      {d.status === "approved" && <p className="small">Approved by {d.approvedBy} at {fmtDateTime(d.approvedAt!)}. Editing the text cancels the approval.</p>}
+      {frozen && <p className="small">{d.status === "sent" ? "Sent" : "Recorded in test mode"} at {fmtDateTime(d.sentAt!)}.</p>}
       {d.status === "failed" && <p className="error small" role="alert">The last send failed: {d.error}</p>}
       {frozen && !d.booking && (
         <div>
@@ -111,7 +112,7 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
           </div>
         </div>
       )}
-      {d.booking && <p className="small">{d.booking.mode === "live" ? "Booked" : "Recorded in test mode (no calendar entry)"}: {d.booking.label}, by {d.booking.by} at {new Date(d.booking.at).toLocaleString("en-IN")}.</p>}
+      {d.booking && <p className="small">{d.booking.mode === "live" ? "Booked" : "Recorded in test mode (no calendar entry)"}: {d.booking.label}, by {d.booking.by} at {fmtDateTime(d.booking.at)}.</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {!frozen && (
         <div className="row-actions">
