@@ -299,3 +299,12 @@ describe("drafting is specific to the company, and checked", () => {
     expect(out.emails![0].personalisation).toEqual(detail);
   });
 });
+
+describe("the draft is addressed to the selected contact", () => {
+  it("starts with the contact's address when one is selected, and with none otherwise", async () => {
+    const app = await takeACallApp();
+    const withContact = { ...app, contact: { checkedAt: NOW.toISOString(), status: "found" as const, domain: "demo.in", candidates: [], chosenEmail: "ritu@demo.in" } };
+    expect((await draftInvitation(withContact, draftLlm([goodBody]), "Riya", NOW)).emails![0].to).toBe("ritu@demo.in");
+    expect((await draftInvitation(app, draftLlm([goodBody]), "Riya", NOW)).emails![0].to).toBe("");
+  });
+});

@@ -11,6 +11,7 @@ import { memoryFor, toView } from "@/lib/memory";
 import { sendMode } from "@/lib/email/send";
 import { toDraftView } from "@/lib/emails/view";
 import { nextStep } from "@/lib/overview";
+import ContactPanel from "./contact-panel";
 import EmailPanel from "./email-panel";
 import { CriterionReview, DecisionForm, ReviewerName } from "./review-controls";
 import { fmtDateTime } from "@/lib/time";
@@ -108,9 +109,7 @@ export default async function ApplicationPage({
           <span><strong>Next:</strong> {step.action}</span>
           <Link className="linkbtn small-btn" href={step.href}>Go</Link>
         </div>
-      ) : (
-        <div className="next-step done"><span>Nothing more is needed from you on this application.</span></div>
-      )}
+      ) : null}
 
       <div className="tabs" role="tablist" aria-label="Application sections">
         {TABS.map((t) => (
@@ -198,6 +197,7 @@ export default async function ApplicationPage({
                   </tbody>
                 </table>
               </div>
+              <ContactPanel appId={app.id} contact={app.contact} canSearch={ex.status === "done"} />
             </>
           )}
         </>
@@ -507,19 +507,16 @@ export default async function ApplicationPage({
       {tab === "email" && (
         <>
           <h2 id="invite">Invite to a first call</h2>
-          <p className="small muted">
-            A drafted invitation, never an automatic one. The model writes it; a reviewer edits, approves and sends each email. No score or assessment is ever put in it, and it promises nothing.
-          </p>
+          <ContactPanel appId={app.id} contact={app.contact} canSearch={ex.status === "done"} />
           {sc ? (
             <EmailPanel
               appId={app.id}
               mode={sendMode()}
-              sharedSender={/@resend\.dev\b/i.test(process.env.RESEND_FROM_EMAIL ?? "")}
               canInvite={decision?.value === "Take a call"}
               drafts={(app.emails ?? []).map(toDraftView)}
             />
           ) : (
-            <p className="muted">Available once the application is scored and a reviewer records the outcome &quot;Take a call&quot;.</p>
+            <p className="muted">Score the application first.</p>
           )}
         </>
       )}

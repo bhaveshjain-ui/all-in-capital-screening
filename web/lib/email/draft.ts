@@ -79,7 +79,7 @@ export async function draftInvitation(app: Application, llm: Llm, by: string, no
       problems = validateDraft(out.subject, out.body, slots, { app, detail: out.personal_detail });
       if (problems.length === 0) {
         const draft: EmailDraft = {
-          id: crypto.randomUUID(), status: "draft", to: "", subject: out.subject.trim(), body: out.body.trim(),
+          id: crypto.randomUUID(), status: "draft", to: app.contact?.chosenEmail ?? "", subject: out.subject.trim(), body: out.body.trim(),
           slots, attendees, slotSource: source, attempts: attempt, personalisation: out.personal_detail, model: llm.model, createdAt: now.toISOString(), createdBy: by,
         };
         return addAudit(

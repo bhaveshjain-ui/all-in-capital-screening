@@ -298,7 +298,7 @@ export interface AuditEntry {
   type:
     | "extraction_run" | "research_planned" | "scoring_run" | "business_types_changed"
     | "criterion_accepted" | "criterion_corrected" | "decision_recorded" | "review_archived"
-    | "email_drafted" | "email_edited" | "email_approved" | "email_sent" | "email_failed" | "booking_created" | "booking_failed" | "settings_applied";
+    | "email_drafted" | "email_edited" | "email_approved" | "email_sent" | "email_failed" | "booking_created" | "booking_failed" | "contact_searched" | "contact_chosen" | "settings_applied";
   /** "system" or the name the reviewer typed (there is no login, so this is self-declared). */
   by: string;
   detail: string;
@@ -326,6 +326,26 @@ export const EmailEditSchema = z.object({
   body: z.string().trim().min(20, "The message is too short.").max(4000),
   by: z.string().trim().max(60).optional(),
 });
+
+export interface ContactCandidate {
+  email: string;
+  name: string;
+  position?: string;
+  /** Hunter's confidence, 0 to 100. */
+  confidence: number;
+  verification: "valid" | "accept_all" | "webmail" | "invalid" | "unknown";
+  via: "domain-search" | "email-finder";
+}
+
+export interface ContactResult {
+  checkedAt: string;
+  status: "found" | "not_found" | "no_domain";
+  domain?: string;
+  candidates: ContactCandidate[];
+  /** The address selected for the invitation. Only pre-selected when a named founder was found or Hunter is very confident. */
+  chosenEmail?: string;
+  note?: string;
+}
 
 export interface EmailDraft {
   id: string;
@@ -386,6 +406,8 @@ export interface Application {
   archivedReviews?: Review[];
   audit?: AuditEntry[];
   emails?: EmailDraft[];
+  /** The point of contact found on Hunter.io, if a reviewer searched. */
+  contact?: ContactResult;
 }
 
 export interface ApplicationSummary {

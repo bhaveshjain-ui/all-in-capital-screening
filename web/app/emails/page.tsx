@@ -20,7 +20,6 @@ export default async function EmailsPage({ searchParams }: { searchParams: Promi
   const tab: EmailTab = raw === "sent" || raw === "failed" ? raw : "awaiting";
 
   const mode = sendMode();
-  const sharedSender = /@resend\.dev\b/i.test(process.env.RESEND_FROM_EMAIL ?? "");
   const rows = listEmails(await allApplications());
   const counts = countByTab(rows);
   const shown = rows.filter((r) => r.tab === tab);
@@ -29,22 +28,8 @@ export default async function EmailsPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <h1>Emails</h1>
-      <p className="muted">
-        Every invitation the model has drafted, across all applications. Edit, approve and send each one here, and book the
-        time an applicant picks once it has gone out. Nothing is sent automatically, and an invitation exists only after a
-        person records &quot;Take a call&quot;.
-      </p>
+      <p className="muted">Every drafted invitation, across all applications.</p>
 
-      {mode === "live" ? (
-        <div className="notice warn-strong">Live mode: approved emails are really sent through Resend.</div>
-      ) : (
-        <div className="notice">Test mode: no email will leave the system. Sending only records what would have been sent.</div>
-      )}
-      {mode === "live" && sharedSender && (
-        <div className="notice">
-          The sending address is Resend&apos;s shared test sender. It can only deliver to the email address of the Resend account itself, so an invitation to an applicant will be refused and shown as failed. To email applicants, verify a domain in Resend and set <code>RESEND_FROM_EMAIL</code> to an address on it.
-        </div>
-      )}
       {shown.length > 0 && <ReviewerName />}
 
       <div className="tabs" role="tablist" aria-label="Email status">
