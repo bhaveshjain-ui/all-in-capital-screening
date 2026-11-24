@@ -381,7 +381,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                 )}
                 <DecisionForm id={app.id} systemLean={ev.lean} existing={app.review?.decision} />
 
-                <h3>Invite to a first call</h3>
+                <h3 id="invite">Invite to a first call</h3>
                 <p className="small muted">
                   A drafted invitation, never an automatic one. The model writes it; a reviewer edits, approves and sends each email. No score or assessment is ever put in it, and it promises nothing.
                 </p>

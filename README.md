@@ -43,3 +43,4 @@ Framework thresholds and weights are provisional until the partners decide (`doc
 
 - Calendar: Cal.com (`CAL_API_KEY`, `CAL_EVENT_TYPE_ID`, optional `CAL_EVENT_TYPE_ID_DEEPTECH`). Free slots come from Cal.com; booking a chosen time is a reviewer click and is recorded only, in test mode. See `docs/build_plan.md` section 5.
 - Evals and the feedback loop: the Evaluation page has per-step evals against targets and a six-stage feedback-loop view with live counts; see `docs/evals_and_feedback_loop.md`.
+- Emails page (`/emails`, in the sidebar with a badge for drafts awaiting review): every drafted invitation across applications, in tabs Awaiting review, Sent and Failed.

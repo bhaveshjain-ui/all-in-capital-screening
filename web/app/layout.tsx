@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import { countByTab, listEmails } from "@/lib/emails";
 import { sendMode } from "@/lib/email/send";
-import { storeProblem } from "@/lib/store";
+import { allApplications, storeProblem } from "@/lib/store";
 import Sidebar from "./sidebar";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-poppins", display: "swap" });
@@ -14,15 +15,16 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const mode = sendMode();
+  const awaiting = countByTab(listEmails(await allApplications().catch(() => []))).awaiting;
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Kolkata" });
   return (
     <html lang="en" className={poppins.variable}>
       <body>
         <div className="frame">
           <div className="shell">
-            <Sidebar />
+            <Sidebar badges={{ "/emails": awaiting }} />
             <div className="panel">
               <div className="topbar">
                 <span>{today}</span>
