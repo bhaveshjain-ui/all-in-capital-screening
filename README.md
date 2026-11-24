@@ -34,3 +34,9 @@ Set the project root directory to `web`, add the environment variables in Vercel
 
 ## Status
 Framework thresholds and weights are provisional until the partners decide (`docs/partner_pack.md`, section 7).
+
+
+## Deployment and live checks (2026-11-24)
+- Hosted on Vercel (project `all-in-capital-screening`, root `web`), storing data in Neon Postgres (`STORE=neon`, `DATABASE_URL`). Without a database the app shows a notice and falls back to the starting values.
+- Model: `GEMINI_MODEL=gemini-3.8-flash` (Google retired `gemini-2.5-flash` for new keys). Long steps (extraction, research, scoring, email draft) have a 300-second function limit; scoring took about 2 minutes on a real application.
+- Run live with the real model on one application (GrainKind): extraction, grounded research, scoring and email drafting all worked. The score (6.10, Further research required) is close to the two trial passes (6.32, 6.24). Resend and live sending have not been run; `SEND_MODE=test` is set.

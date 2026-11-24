@@ -5,7 +5,7 @@ import { getLlm } from "@/lib/llm/gemini";
 import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /** Draft an invitation with the model. Nothing is sent; the draft starts with no recipient. */
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {

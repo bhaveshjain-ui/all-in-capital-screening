@@ -10,7 +10,7 @@ import { currentValues } from "@/lib/settings";
 import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /** Run scoring (calls the model; up to two attempts). */
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
