@@ -9,7 +9,7 @@ const icon = (d: ReactNode) => (
 );
 
 const ITEMS: { href: string; label: string; icon: ReactNode }[] = [
-  { href: "/", label: "Framework", icon: icon(<><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>) },
+  { href: "/", label: "Overview", icon: icon(<><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>) },
   { href: "/applications", label: "Applications", icon: icon(<><path d="M4 4h16v12H4z" /><path d="M4 12h5l1.5 3h3L15 12h5" /><path d="M8 20h8" /></>) },
   { href: "/emails", label: "Emails", icon: icon(<><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></>) },
   { href: "/evaluation", label: "Evaluation", icon: icon(<><path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-8" /><path d="M22 20H2" /></>) },

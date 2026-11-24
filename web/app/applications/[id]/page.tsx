@@ -370,7 +370,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                 {sc.d2.value !== "not_triggered" && (
                   <p><strong>Rule dependence ({sc.d2.value.replace("_", " ")}):</strong> {sc.d2.reason}</p>
                 )}
-                <h3>Decision</h3>
+                <h3 id="review">Decision</h3>
                 <p className="small muted">
                   The decision is the reviewer&apos;s, recorded as theirs. It can differ from the suggestion; a difference is kept as a disagreement so the partners can see how often it happens.
                 </p>

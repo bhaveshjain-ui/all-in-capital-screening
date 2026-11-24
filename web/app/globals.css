@@ -265,3 +265,8 @@ tr.current-row td { background: var(--lime); font-weight: 700; }
 .email-block { margin: 22px 0 6px; }
 .email-block .email-row-head { margin-bottom: 4px; }
 .email-block .email-card { max-width: none; margin-top: 8px; }
+
+a.param-link { display: block; text-decoration: none; color: inherit; font-weight: inherit; transition: transform 0.12s, box-shadow 0.12s; }
+a.param-link:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--line); color: inherit; }
+.scoring-details { margin-top: 28px; }
+.scoring-details summary { font-size: 1.05rem; }
