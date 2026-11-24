@@ -127,7 +127,7 @@ function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "tes
   );
 }
 
-export default function EmailPanel({ appId, mode, drafts, canInvite }: { appId: string; mode: "test" | "live"; drafts: DraftView[]; canInvite: boolean }) {
+export default function EmailPanel({ appId, mode, drafts, canInvite, sharedSender = false }: { appId: string; mode: "test" | "live"; drafts: DraftView[]; canInvite: boolean; sharedSender?: boolean }) {
   const router = useRouter();
   const [by] = useReviewerName();
   const [busy, setBusy] = useState(false);
@@ -152,6 +152,11 @@ export default function EmailPanel({ appId, mode, drafts, canInvite }: { appId: 
         <div className="notice">Test mode: no email will leave the system. Sending only records what would have been sent. Live sending needs <code>SEND_MODE=live</code>, a Resend key and a verified from-address.</div>
       ) : (
         <div className="notice warn-strong">Live mode: approved emails are really sent through Resend.</div>
+      )}
+      {mode === "live" && sharedSender && (
+        <div className="notice">
+          The sending address is Resend&apos;s shared test sender. It can only deliver to the email address of the Resend account itself, so an invitation to an applicant will be refused and shown as failed. To email applicants, verify a domain in Resend and set <code>RESEND_FROM_EMAIL</code> to an address on it.
+        </div>
       )}
       {!canInvite ? (
         <p className="muted">Available once a reviewer records the outcome &quot;Take a call&quot;. An invitation is never drafted or sent for any other outcome.</p>

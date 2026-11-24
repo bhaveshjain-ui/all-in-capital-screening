@@ -388,6 +388,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
                 <EmailPanel
                   appId={app.id}
                   mode={sendMode()}
+                  sharedSender={/@resend\.dev\b/i.test(process.env.RESEND_FROM_EMAIL ?? "")}
                   canInvite={app.review?.decision?.value === "Take a call"}
                   drafts={(app.emails ?? []).map((d) => ({
                     id: d.id, status: d.status, to: d.to, subject: d.subject, body: d.body,
