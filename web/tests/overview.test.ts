@@ -19,10 +19,10 @@ const draft = (status: EmailDraft["status"], extra: Partial<EmailDraft> = {}) =>
 
 describe("what each application needs next", () => {
   it("walks the five steps in order", () => {
-    expect(nextStep(app("A", { extraction: { status: "not_run" } }))).toMatchObject({ stage: 1, href: "/applications/id-A" });
+    expect(nextStep(app("A", { extraction: { status: "not_run" } }))).toMatchObject({ stage: 1, href: "/applications/id-A?tab=documents" });
     expect(nextStep(app("B"))).toMatchObject({ stage: 2, action: "Run the research" });
     expect(nextStep(app("C", { research }))).toMatchObject({ stage: 3, action: "Run the scoring" });
-    expect(nextStep(app("D", { research, scoring }))).toMatchObject({ stage: 4, href: "/applications/id-D#review" });
+    expect(nextStep(app("D", { research, scoring }))).toMatchObject({ stage: 4, href: "/applications/id-D?tab=scores" });
   });
   it("needs nothing more after a Pass or Further research decision", () => {
     expect(nextStep(app("E", { research, scoring, ...decision("Pass") }))).toBeNull();
@@ -30,7 +30,7 @@ describe("what each application needs next", () => {
   });
   it("follows a Take a call through the invitation to booking", () => {
     const base = { research, scoring, ...decision("Take a call") };
-    expect(nextStep(app("G", base))).toMatchObject({ stage: 5, action: "Draft the invitation", href: "/applications/id-G#invite" });
+    expect(nextStep(app("G", base))).toMatchObject({ stage: 5, action: "Draft the invitation", href: "/applications/id-G?tab=email" });
     expect(nextStep(app("H", { ...base, emails: [draft("draft")] }))).toMatchObject({ action: "Review and send the invitation", href: "/emails" });
     expect(nextStep(app("I", { ...base, emails: [draft("failed")] }))).toMatchObject({ href: "/emails" });
     expect(nextStep(app("J", { ...base, emails: [draft("test_logged")] }))).toMatchObject({ action: "Book a time once they reply", href: "/emails?tab=sent" });

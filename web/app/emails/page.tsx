@@ -62,7 +62,7 @@ export default async function EmailsPage({ searchParams }: { searchParams: Promi
           <section key={`${r.appId}-${r.draftId}`} className="email-block">
             <div className="email-row-head">
               <div className="email-company">{r.company}</div>
-              <Link className="linkbtn small-btn" href={`/applications/${r.appId}#invite`}>Open the application</Link>
+              <Link className="linkbtn small-btn" href={`/applications/${r.appId}?tab=email`}>Open the application</Link>
             </div>
             <DraftCard key={`${r.draftId}-${r.status}-${r.to}-${r.subject.length}-${r.body.length}-${r.booking ? 1 : 0}`} appId={r.appId} d={toDraftView(r.draft)} mode={mode} />
           </section>

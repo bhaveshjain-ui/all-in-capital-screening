@@ -19,14 +19,14 @@ const DONE_STATUSES = new Set(["sent", "test_logged"]);
 export function nextStep(a: Application): NextStep | null {
   const base = { appId: a.id, company: a.extraction.result?.company.name || a.name };
   const here = `/applications/${a.id}`;
-  if (a.extraction.status !== "done") return { ...base, action: "Read the claims in the documents", href: here, stage: 1 };
-  if (!a.research) return { ...base, action: "Run the research", href: here, stage: 2 };
-  if (!a.scoring) return { ...base, action: "Run the scoring", href: here, stage: 3 };
+  if (a.extraction.status !== "done") return { ...base, action: "Read the claims in the documents", href: `${here}?tab=documents`, stage: 1 };
+  if (!a.research) return { ...base, action: "Run the research", href: `${here}?tab=research`, stage: 2 };
+  if (!a.scoring) return { ...base, action: "Run the scoring", href: `${here}?tab=scores`, stage: 3 };
   const decision = a.review?.decision;
-  if (!decision) return { ...base, action: "Review the scores and record your decision", href: `${here}#review`, stage: 4 };
+  if (!decision) return { ...base, action: "Review the scores and record your decision", href: `${here}?tab=scores`, stage: 4 };
   if (decision.value !== "Take a call") return null;
   const emails = a.emails ?? [];
-  if (emails.length === 0) return { ...base, action: "Draft the invitation", href: `${here}#invite`, stage: 5 };
+  if (emails.length === 0) return { ...base, action: "Draft the invitation", href: `${here}?tab=email`, stage: 5 };
   if (emails.some((e) => e.status === "draft" || e.status === "approved" || e.status === "failed")) {
     return { ...base, action: "Review and send the invitation", href: "/emails", stage: 5 };
   }
