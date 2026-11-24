@@ -1,0 +1,16 @@
+[
+{"app":"Talkbook","criteria":{"A1":{"status":"scored","score":6,"class":"S-u"},"A2":{"status":"scored","score":4,"class":"S-u"},"A3":{"status":"scored","score":5,"class":"S-u"},"A4":{"status":"scored","score":7,"class":"S-u"},"A5":{"status":"scored","score":4,"class":"S-u"},"B1":{"status":"scored","score":5,"class":"S-u"},"B2":{"status":"scored","score":5,"class":"S-u"},"B3":{"status":"scored","score":4,"class":"S-u"},"B4":{"status":"unknown","score":null},"B5":{"status":"scored","score":6,"class":"S-u"},"B6":{"status":"scored","score":3,"class":"X"}},
+"recomputed":[{"item":"TAM","match":true},{"item":"SAM","match":true},{"item":"SOM","match":true},{"item":"MRR = 340 x 500 (claimed 2.1L deck, 1.9L form; computed 1.7L)","match":false},{"item":"revenue per team 13,000 vs 10,625 seat-implied","match":false},{"item":"payback 5 months vs 5.3-6.5","match":false},{"item":"channel counts","match":true},{"item":"annual vs monthly price","match":true},{"item":"12-month target MRR per team 15,000 vs current 10,625-13,000","match":false}],
+"contradictions":[{"item":"MRR 2.1L vs 1.9L vs 1.7L computed","material":true},{"item":"ARPA 13,000 vs 10,625 implied","material":true},{"item":"India-first competitor claim vs research log","material":true}],
+"unknowns":[{"criterion":"B4","missing":"burn, payroll, cost of 12-month plan"}],
+"D1":{"flag":"likely","reason":"MeetRecord (possibly Outdoo AI) overlap in AI call summaries and CRM insights for sales teams"},
+"D2":{"value":"not_triggered"},
+"fit":{"sector_selected":"Consumer tech","sector_assessed":"B2B SaaS / AI sales tools","note":"label looks wrong; outside the four listed sectors"}},
+{"app":"Yatrika","criteria":{"A1":{"status":"scored","score":7,"class":"S-u"},"A2":{"status":"scored","score":4,"class":"S-u"},"A3":{"status":"scored","score":6,"class":"S-c"},"A4":{"status":"scored","score":5,"class":"S-u"},"A5":{"status":"scored","score":4,"class":"S-u"},"B1":{"status":"scored","score":5,"class":"S-u"},"B2":{"status":"scored","score":4,"class":"S-u"},"B3":{"status":"scored","score":4,"class":"S-u"},"B4":{"status":"unknown","score":null},"B5":{"status":"scored","score":3,"class":"S-u"},"B6":{"status":"scored","score":3,"class":"X"}},
+"recomputed":[{"item":"commission 12% x 38.6L","match":true},{"item":"avg booking value","match":true},{"item":"travellers per booking","match":true},{"item":"revenue per booking","match":true},{"item":"paid CAC upper bound","match":true},{"item":"thousands of travellers vs 1,300","match":false},{"item":"market 3 lakh Cr no inputs","match":false}],
+"contradictions":[{"item":"travellers served thousands vs about 1,300","material":true},{"item":"brand/geography claim vs Rajasthan and Uttarakhand referrals","material":true},{"item":"AI planning vs 40 templates and manual WhatsApp","material":true},{"item":"ask amount missing in deck","material":false}],
+"unknowns":[{"criterion":"B4","missing":"12-month milestones, split of funds, burn"}],
+"D1":{"flag":"none","reason":"travel marketplace, no overlap"},
+"D2":{"value":"not_triggered"},
+"fit":{"sector_selected":"Consumer tech","sector_assessed":"consumer travel marketplace","note":"broadly in scope; AI element thin"}}
+]

@@ -1,0 +1,141 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useReviewerName } from "./review-controls";
+
+export interface DraftView {
+  id: string;
+  status: "draft" | "approved" | "sent" | "test_logged" | "failed";
+  to: string;
+  subject: string;
+  body: string;
+  slots: { label: string }[];
+  attendees: string[];
+  model: string;
+  createdAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  sentAt?: string;
+  mode?: "test" | "live";
+  error?: string;
+}
+
+async function call(url: string, method: string, body: unknown) {
+  const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error ?? "The request failed.");
+}
+
+const STATUS: Record<DraftView["status"], string> = {
+  draft: "Draft: not approved",
+  approved: "Approved: ready to send",
+  sent: "Sent",
+  test_logged: "Test mode: nothing was sent",
+  failed: "Sending failed",
+};
+
+function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "test" | "live" }) {
+  const router = useRouter();
+  const [by] = useReviewerName();
+  const [to, setTo] = useState(d.to);
+  const [subject, setSubject] = useState(d.subject);
+  const [body, setBody] = useState(d.body);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const frozen = d.status === "sent" || d.status === "test_logged";
+  const dirty = to !== d.to || subject !== d.subject || body !== d.body;
+
+  async function run(fn: () => Promise<void>) {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+      router.refresh();
+    }
+  }
+
+  const save = () => run(() => call(`/api/applications/${appId}/email/${d.id}`, "PATCH", { to, subject, body, by }));
+  const approve = () => run(() => call(`/api/applications/${appId}/email/${d.id}/approve`, "POST", { by }));
+  const send = () => run(() => call(`/api/applications/${appId}/email/${d.id}/send`, "POST", { by }));
+
+  return (
+    <div className="card form email-card">
+      <div className="small muted">
+        {STATUS[d.status]} · drafted {new Date(d.createdAt).toLocaleString("en-IN")} with {d.model} · on the call: {d.attendees.join(" and ")}
+      </div>
+      <label>
+        To (one address; type the applicant&apos;s email, none was given)
+        <input value={to} onChange={(e) => setTo(e.target.value)} disabled={frozen} maxLength={254} placeholder="founder@company.in" />
+      </label>
+      <label>
+        Subject
+        <input value={subject} onChange={(e) => setSubject(e.target.value)} disabled={frozen} maxLength={150} />
+      </label>
+      <label>
+        Message (plain text)
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={frozen} rows={12} maxLength={4000} />
+      </label>
+      <p className="small muted">
+        Slots offered: {d.slots.map((s) => s.label).join("; ")}. These come from the Tuesday/Thursday afternoon rule and do not check anyone&apos;s calendar: confirm availability before sending.
+      </p>
+      {d.status === "approved" && <p className="small">Approved by {d.approvedBy} at {new Date(d.approvedAt!).toLocaleString("en-IN")}. Editing the text cancels the approval.</p>}
+      {frozen && <p className="small">{d.status === "sent" ? "Sent" : "Recorded in test mode"} at {new Date(d.sentAt!).toLocaleString("en-IN")}.</p>}
+      {d.status === "failed" && <p className="error small" role="alert">The last send failed: {d.error}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+      {!frozen && (
+        <div className="row-actions">
+          <button type="button" className="secondary" onClick={save} disabled={busy || !dirty}>Save changes</button>
+          <button type="button" onClick={approve} disabled={busy || dirty || d.status === "approved" || !d.to}>Approve</button>
+          <button type="button" onClick={send} disabled={busy || dirty || !(d.status === "approved" || d.status === "failed")}>
+            {mode === "live" ? "Send email" : "Send (test mode: nothing is sent)"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function EmailPanel({ appId, mode, drafts, canInvite }: { appId: string; mode: "test" | "live"; drafts: DraftView[]; canInvite: boolean }) {
+  const router = useRouter();
+  const [by] = useReviewerName();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function draft() {
+    setBusy(true);
+    setError(null);
+    try {
+      await call(`/api/applications/${appId}/email/draft`, "POST", { by });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+      router.refresh();
+    }
+  }
+
+  return (
+    <div>
+      {mode === "test" ? (
+        <div className="notice">Test mode: no email will leave the system. Sending only records what would have been sent. Live sending needs <code>SEND_MODE=live</code>, a Resend key and a verified from-address.</div>
+      ) : (
+        <div className="notice warn-strong">Live mode: approved emails are really sent through Resend.</div>
+      )}
+      {!canInvite ? (
+        <p className="muted">Available once a reviewer records the outcome &quot;Take a call&quot;. An invitation is never drafted or sent for any other outcome.</p>
+      ) : (
+        <>
+          <button onClick={draft} disabled={busy}>{busy ? "Drafting…" : drafts.length ? "Draft another invitation" : "Draft an invitation"}</button>
+          {error && <p className="error pre-line" role="alert">{error}</p>}
+        </>
+      )}
+      {drafts.map((d) => <DraftCard key={`${d.id}-${d.status}-${d.to}-${d.subject.length}-${d.body.length}`} appId={appId} d={d} mode={mode} />)}
+    </div>
+  );
+}

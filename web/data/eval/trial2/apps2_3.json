@@ -1,0 +1,10 @@
+[
+{"app":"EarnWise","criteria":{"A1":{"status":"scored","score":3,"class":"S-u"},"A2":{"status":"scored","score":3,"class":"S-u"},"A3":{"status":"scored","score":3,"class":"S-u"},"A4":{"status":"scored","score":2,"class":"S-u"},"A5":{"status":"scored","score":1,"class":"S-u"},"B1":{"status":"scored","score":4,"class":"S-u"},"B2":{"status":"unknown","score":null},"B3":{"status":"scored","score":4,"class":"S-u"},"B4":{"status":"scored","score":4,"class":"S-u"},"B5":{"status":"scored","score":4,"class":"S-u"},"B6":{"status":"scored","score":3,"class":"S-u"}},
+"recomputed":[{"item":"TAM","match":false},{"item":"advances sum","match":true},{"item":"avg advance","match":false},{"item":"use of funds","match":true},{"item":"angel implied post","match":true}],
+"contradictions":[{"item":"founder background","material":true},{"item":"team size","material":true},{"item":"enterprise clients","material":true},{"item":"technology leadership","material":true},{"item":"co-founder departure and funding","material":true}],
+"D1":{"flag":"none"},"D2":{"value":"unknown"}},
+{"app":"Yatrika","criteria":{"A1":{"status":"scored","score":6,"class":"S-c"},"A2":{"status":"scored","score":4,"class":"S-u"},"A3":{"status":"scored","score":6,"class":"S-c"},"A4":{"status":"scored","score":6,"class":"S-c"},"A5":{"status":"scored","score":5,"class":"S-u"},"B1":{"status":"scored","score":5,"class":"S-u"},"B2":{"status":"scored","score":4,"class":"S-u"},"B3":{"status":"scored","score":4,"class":"S-u"},"B4":{"status":"unknown","score":null},"B5":{"status":"scored","score":3,"class":"S-u"},"B6":{"status":"scored","score":2,"class":"X"}},
+"recomputed":[{"item":"revenue","match":true},{"item":"avg booking","match":true},{"item":"commission per booking","match":true},{"item":"travellers per booking","match":true},{"item":"paid CAC","match":true},{"item":"market no inputs","match":false},{"item":"valuation","match":true}],
+"contradictions":[{"item":"travellers","material":false},{"item":"geographic reach","material":false},{"item":"product description","material":false},{"item":"growth and reviews","material":false}],
+"D1":{"flag":"none"},"D2":{"value":"not_triggered"}}
+]
