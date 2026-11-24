@@ -42,3 +42,4 @@ Framework thresholds and weights are provisional until the partners decide (`doc
 - Run live with the real model on one application (GrainKind): extraction, grounded research, scoring and email drafting all worked. The score (6.10, Further research required) is close to the two trial passes (6.32, 6.24). Resend and live sending have not been run; `SEND_MODE=test` is set.
 
 - Calendar: Cal.com (`CAL_API_KEY`, `CAL_EVENT_TYPE_ID`, optional `CAL_EVENT_TYPE_ID_DEEPTECH`). Free slots come from Cal.com; booking a chosen time is a reviewer click and is recorded only, in test mode. See `docs/build_plan.md` section 5.
+- Evals and the feedback loop: the Evaluation page has per-step evals against targets and a six-stage feedback-loop view with live counts; see `docs/evals_and_feedback_loop.md`.

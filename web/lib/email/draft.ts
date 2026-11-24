@@ -58,7 +58,7 @@ export async function draftInvitation(app: Application, llm: Llm, by: string, no
       if (problems.length === 0) {
         const draft: EmailDraft = {
           id: crypto.randomUUID(), status: "draft", to: "", subject: out.subject.trim(), body: out.body.trim(),
-          slots, attendees, slotSource: source, model: llm.model, createdAt: now.toISOString(), createdBy: by,
+          slots, attendees, slotSource: source, attempts: attempt, model: llm.model, createdAt: now.toISOString(), createdBy: by,
         };
         return addAudit(
           { ...app, emails: [...(app.emails ?? []), draft] },

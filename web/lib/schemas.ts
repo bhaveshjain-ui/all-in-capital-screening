@@ -341,6 +341,8 @@ export interface EmailDraft {
   mode?: "test" | "live";
   resendId?: string | null;
   error?: string;
+  /** How many model attempts passed the code checks (1 = first try). Older drafts have none. */
+  attempts?: number;
   /** Where the offered slots came from. */
   slotSource?: "cal.com" | "fixed rule";
   /** Set once a reviewer books the time the applicant chose. "test" means no calendar entry was made. */
