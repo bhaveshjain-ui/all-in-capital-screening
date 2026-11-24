@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { CRITERIA } from "@/lib/framework/config";
 import { currentValues } from "@/lib/settings";
-import { getStore } from "@/lib/store";
+import { savedSettings } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const doc = await getStore().getSettings();
+  const doc = await savedSettings();
   const v = currentValues(doc);
   const total = Object.values(v.weights).reduce((a, b) => a + b, 0);
   const p = v.params;

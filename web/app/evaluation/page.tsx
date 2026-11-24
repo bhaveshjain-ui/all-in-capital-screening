@@ -3,7 +3,7 @@ import {
   liveDecisions, runBacktest, runTrial, thresholdGrid, weightSensitivity,
 } from "@/lib/evaluation";
 import { currentValues, type SettingsValues } from "@/lib/settings";
-import { getStore } from "@/lib/store";
+import { allApplications, savedSettings } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +18,7 @@ const LABEL = { agree: "Agree", soft: "Soft disagreement", hard: "Hard disagreem
 
 export default async function EvaluationPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const q = await searchParams;
-  const store = getStore();
-  const saved = currentValues(await store.getSettings());
+  const saved = currentValues(await savedSettings());
 
   const over = { take: num(q.take), pass: num(q.pass), cov: num(q.cov), band: num(q.band), a2: num(q.a2) };
   const whatIf = Object.values(over).some((v) => v !== undefined);
@@ -39,7 +38,7 @@ export default async function EvaluationPage({ searchParams }: { searchParams: P
   const trial = runTrial(v);
   const grid = thresholdGrid(v);
   const flips = weightSensitivity(v);
-  const live = liveDecisions(await store.all());
+  const live = liveDecisions(await allApplications());
   const p = v.params;
 
   return (

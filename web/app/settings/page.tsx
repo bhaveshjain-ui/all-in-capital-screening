@@ -1,12 +1,12 @@
 import { CRITERIA } from "@/lib/framework/config";
 import { currentValues, FRAMEWORK_DEFAULTS } from "@/lib/settings";
-import { getStore } from "@/lib/store";
+import { savedSettings } from "@/lib/store";
 import SettingsForm from "./settings-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const doc = await getStore().getSettings();
+  const doc = await savedSettings();
   const current = currentValues(doc);
   const history = [...(doc?.history ?? [])].reverse();
   return (

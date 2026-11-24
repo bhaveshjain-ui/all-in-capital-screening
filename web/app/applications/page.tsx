@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getStore } from "@/lib/store";
+import { getStore, storeProblem } from "@/lib/store";
 import UploadForm from "./upload-form";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +11,14 @@ const STATUS: Record<string, string> = {
 };
 
 export default async function ApplicationsPage() {
+  if (storeProblem()) {
+    return (
+      <>
+        <h1>Applications</h1>
+        <p className="muted">Applications cannot be listed or uploaded until the database is connected (see the notice above).</p>
+      </>
+    );
+  }
   const apps = await getStore().list();
   return (
     <>
