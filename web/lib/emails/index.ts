@@ -21,6 +21,8 @@ export interface EmailRow {
   error?: string;
   booking?: { label: string; mode: "test" | "live" };
   slotSource?: EmailDraft["slotSource"];
+  /** The full draft, for the controls. */
+  draft: EmailDraft;
 }
 
 /** Drafts and approved drafts are waiting for a person; sent and test-logged ones are done; failed ones need a look. */
@@ -40,6 +42,7 @@ export function listEmails(apps: Application[]): EmailRow[] {
         createdAt: d.createdAt, lastAt: d.sentAt ?? d.approvedAt ?? d.editedAt ?? d.createdAt,
         mode: d.mode, error: d.error, slotSource: d.slotSource,
         booking: d.booking ? { label: d.booking.label, mode: d.booking.mode } : undefined,
+        draft: d,
       });
     }
   }

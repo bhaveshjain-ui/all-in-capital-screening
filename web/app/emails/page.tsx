@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { countByTab, listEmails, type EmailRow, type EmailTab } from "@/lib/emails";
+import { DraftCard } from "../applications/[id]/email-panel";
+import { ReviewerName } from "../applications/[id]/review-controls";
+import { sendMode } from "@/lib/email/send";
+import { countByTab, listEmails, type EmailTab } from "@/lib/emails";
+import { toDraftView } from "@/lib/emails/view";
 import { allApplications } from "@/lib/store";
-import { fmtDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -11,21 +14,13 @@ const TABS: { key: EmailTab; label: string; empty: string }[] = [
   { key: "failed", label: "Failed", empty: "No failed sends." },
 ];
 
-function statusPill(r: EmailRow) {
-  switch (r.status) {
-    case "draft": return <span className="pill pill-test">Draft: not approved</span>;
-    case "approved": return <span className="pill pill-good">Approved: ready to send</span>;
-    case "sent": return <span className="pill pill-good">Sent</span>;
-    case "test_logged": return <span className="pill pill-test">Test only: nothing was sent</span>;
-    case "failed": return <span className="pill pill-live">Failed</span>;
-  }
-}
-
 export default async function EmailsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const q = await searchParams;
   const raw = Array.isArray(q.tab) ? q.tab[0] : q.tab;
   const tab: EmailTab = raw === "sent" || raw === "failed" ? raw : "awaiting";
 
+  const mode = sendMode();
+  const sharedSender = /@resend\.dev\b/i.test(process.env.RESEND_FROM_EMAIL ?? "");
   const rows = listEmails(await allApplications());
   const counts = countByTab(rows);
   const shown = rows.filter((r) => r.tab === tab);
@@ -35,9 +30,22 @@ export default async function EmailsPage({ searchParams }: { searchParams: Promi
     <>
       <h1>Emails</h1>
       <p className="muted">
-        Every invitation the model has drafted, across all applications. A reviewer edits, approves and sends each one from its
-        application page; nothing is sent automatically, and an invitation exists only after a person records &quot;Take a call&quot;.
+        Every invitation the model has drafted, across all applications. Edit, approve and send each one here, and book the
+        time an applicant picks once it has gone out. Nothing is sent automatically, and an invitation exists only after a
+        person records &quot;Take a call&quot;.
       </p>
+
+      {mode === "live" ? (
+        <div className="notice warn-strong">Live mode: approved emails are really sent through Resend.</div>
+      ) : (
+        <div className="notice">Test mode: no email will leave the system. Sending only records what would have been sent.</div>
+      )}
+      {mode === "live" && sharedSender && (
+        <div className="notice">
+          The sending address is Resend&apos;s shared test sender. It can only deliver to the email address of the Resend account itself, so an invitation to an applicant will be refused and shown as failed. To email applicants, verify a domain in Resend and set <code>RESEND_FROM_EMAIL</code> to an address on it.
+        </div>
+      )}
+      {shown.length > 0 && <ReviewerName />}
 
       <div className="tabs" role="tablist" aria-label="Email status">
         {TABS.map((t) => (
@@ -51,31 +59,13 @@ export default async function EmailsPage({ searchParams }: { searchParams: Promi
         <div className="card"><p className="muted" style={{ margin: 0 }}>{current.empty}</p></div>
       ) : (
         shown.map((r) => (
-          <div className="card email-row" key={`${r.appId}-${r.draftId}`}>
+          <section key={`${r.appId}-${r.draftId}`} className="email-block">
             <div className="email-row-head">
-              <div>
-                <div className="email-company">{r.company}</div>
-                <div className="small muted">
-                  To: {r.to || "no recipient yet"} · on the call: {r.attendees.join(" and ")} · {fmtDateTime(r.lastAt)}
-                </div>
-              </div>
-              {statusPill(r)}
+              <div className="email-company">{r.company}</div>
+              <Link className="linkbtn small-btn" href={`/applications/${r.appId}#invite`}>Open the application</Link>
             </div>
-            <div className="email-subject">{r.subject}</div>
-            {r.error && <p className="error small">{r.error}</p>}
-            {r.booking && (
-              <p className="small">{r.booking.mode === "live" ? "Booked" : "Booking recorded in test mode"}: {r.booking.label}</p>
-            )}
-            <details>
-              <summary className="small">Read the message</summary>
-              <pre className="email-body">{r.body}</pre>
-            </details>
-            <div className="row-actions" style={{ marginTop: 10 }}>
-              <Link className="linkbtn small-btn" href={`/applications/${r.appId}#invite`}>
-                {r.tab === "awaiting" ? "Open to edit, approve and send" : "Open the application"}
-              </Link>
-            </div>
-          </div>
+            <DraftCard key={`${r.draftId}-${r.status}-${r.to}-${r.subject.length}-${r.body.length}-${r.booking ? 1 : 0}`} appId={r.appId} d={toDraftView(r.draft)} mode={mode} />
+          </section>
         ))
       )}
     </>

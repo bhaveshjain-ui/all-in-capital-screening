@@ -261,3 +261,7 @@ tr.current-row td { background: var(--lime); font-weight: 700; }
 .email-subject { font-weight: 600; margin: 10px 0 6px; }
 .email-body { white-space: pre-wrap; word-break: break-word; font: 0.88rem/1.55 var(--font-poppins), system-ui, sans-serif; background: var(--bg); padding: 14px 16px; border-radius: 14px; margin: 10px 0 0; }
 .email-row details summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+
+.email-block { margin: 22px 0 6px; }
+.email-block .email-row-head { margin-bottom: 4px; }
+.email-block .email-card { max-width: none; margin-top: 8px; }

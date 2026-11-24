@@ -5,25 +5,9 @@ import { useRouter } from "next/navigation";
 import { useReviewerName } from "./review-controls";
 import { fmtDateTime } from "@/lib/time";
 
-export interface DraftView {
-  id: string;
-  status: "draft" | "approved" | "sent" | "test_logged" | "failed";
-  to: string;
-  subject: string;
-  body: string;
-  slots: { label: string; startIso: string }[];
-  slotSource?: "cal.com" | "fixed rule";
-  personalisation?: { sentence: string; quote: string; source: "deck" | "form" };
-  booking?: { label: string; mode: "test" | "live"; by: string; at: string };
-  attendees: string[];
-  model: string;
-  createdAt: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  sentAt?: string;
-  mode?: "test" | "live";
-  error?: string;
-}
+import type { DraftView } from "@/lib/emails/view";
+
+export type { DraftView };
 
 async function call(url: string, method: string, body: unknown) {
   const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -39,7 +23,7 @@ const STATUS: Record<DraftView["status"], string> = {
   failed: "Sending failed",
 };
 
-function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "test" | "live" }) {
+export function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "test" | "live" }) {
   const router = useRouter();
   const [by] = useReviewerName();
   const [to, setTo] = useState(d.to);
