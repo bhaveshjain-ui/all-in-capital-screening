@@ -65,7 +65,8 @@ describe("step 2 and 4 are honest about what is missing", () => {
   it("counts stored corrections but reports no retrieval accuracy", () => {
     const a = app({ review: { corrections: [{ id: "1" } as never, { id: "2" } as never], accepted: [] } });
     const r = measureCorrections([a]);
-    expect(r.n).toBe(2);
+    expect(r.n).toBe(0); // no useful / not useful marks yet
+    expect(r.basis).toMatch(/2 corrections stored/);
     expect(r.measured).toBeNull();
   });
 });
@@ -105,7 +106,7 @@ describe("feedback loop", () => {
     });
     const loop = feedbackLoop([a]);
     expect(loop[0].count).toBe(3); // one correction, one decision, one email edit
-    expect(loop[1].gap).toMatch(/Email edits/);
+    expect(loop[1].gap).toMatch(/Edits to scores and invitations are kept/);
     expect(loop[2].count).toBe(1);
     expect(loop[5].count).toBe(1); // one draft, nothing scored
   });

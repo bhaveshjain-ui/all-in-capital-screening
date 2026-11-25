@@ -2,6 +2,7 @@ import { InvalidModelOutputError, type Llm } from "../llm";
 import { buildEmailPrompt } from "../prompts/email";
 import { addAudit } from "../review";
 import { squash } from "../scoring/validate";
+import { editExamples } from "./precedent";
 import { EmailDraftOutputSchema, type Application, type EmailDraft, type EmailPersonalDetail } from "../schemas";
 import { calConfig, eventTypeFor, fetchCalSlots, CalError } from "../calendar/cal";
 import { attendeesFor, proposeSlots, type Slot } from "./slots";
@@ -64,28 +65,30 @@ export async function chooseSlots(attendees: string[], now: Date, fetchSlots = f
   return { slots, source: "cal.com" };
 }
 
-export async function draftInvitation(app: Application, llm: Llm, by: string, now = new Date(), fetchSlots = fetchCalSlots): Promise<Application> {
+export async function draftInvitation(app: Application, llm: Llm, by: string, now = new Date(), fetchSlots = fetchCalSlots, allApps: Application[] = []): Promise<Application> {
   if (!app.scoring) throw new EmailStateError("Score the application first.");
   requireTakeACall(app);
 
   const attendees = attendeesFor(app.scoring.businessTypes.types);
   const { slots, source } = await chooseSlots(attendees, now, fetchSlots);
+  const examples = editExamples(allApps, app.id);
 
   let feedback: string | undefined;
   let problems: string[] = [];
   for (let attempt = 1; attempt <= MAX_DRAFT_ATTEMPTS; attempt++) {
     try {
-      const out = await llm.json(buildEmailPrompt(app, slots, attendees, feedback), EmailDraftOutputSchema);
+      const out = await llm.json(buildEmailPrompt(app, slots, attendees, feedback, examples), EmailDraftOutputSchema);
       problems = validateDraft(out.subject, out.body, slots, { app, detail: out.personal_detail });
       if (problems.length === 0) {
         const draft: EmailDraft = {
           id: crypto.randomUUID(), status: "draft", to: app.contact?.chosenEmail ?? "", subject: out.subject.trim(), body: out.body.trim(),
-          slots, attendees, slotSource: source, attempts: attempt, personalisation: out.personal_detail, model: llm.model, createdAt: now.toISOString(), createdBy: by,
+          slots, attendees, slotSource: source, attempts: attempt, personalisation: out.personal_detail, original: { subject: out.subject.trim(), body: out.body.trim() },
+          precedentUsed: examples.length ? examples.map((x) => ({ company: x.company, draftId: x.draftId })) : undefined, model: llm.model, createdAt: now.toISOString(), createdBy: by,
         };
         return addAudit(
           { ...app, emails: [...(app.emails ?? []), draft] },
           "email_drafted", by,
-          `Invitation drafted with ${llm.model} (${slots.length} slots from ${source}, attendees: ${attendees.join(", ")}). Not sent.`,
+          `Invitation drafted with ${llm.model} (${slots.length} slots from ${source}, attendees: ${attendees.join(", ")}${examples.length ? `, shaped by ${examples.length} earlier reviewer edit${examples.length > 1 ? "s" : ""}` : ""}). Not sent.`,
         );
       }
     } catch (e) {

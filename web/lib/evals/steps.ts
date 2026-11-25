@@ -115,14 +115,16 @@ export function measureScore(v: SettingsValues): StepResult {
 export function measureCorrections(apps: Application[]): StepResult {
   let corrections = 0;
   for (const a of apps) corrections += (a.review?.corrections.length ?? 0) + (a.archivedReviews ?? []).reduce((n, r) => n + r.corrections.length, 0);
+  const marks = apps.flatMap((a) => a.memoryMarks ?? []);
+  const useful = marks.filter((m) => m.useful).length;
   return {
     id: "corrections",
-    measured: null,
-    n: corrections,
-    basis: corrections
-      ? `${corrections} correction${corrections === 1 ? "" : "s"} stored, but whether the right ones are retrieved has not been judged.`
-      : "No corrections stored yet.",
-    needs: "A set of past corrections that reviewers mark as relevant or not when they are shown on a new application. The correction memory already shows them; add a one-click \"useful / not useful\" to measure retrieval.",
+    measured: pct(useful, marks.length),
+    n: marks.length,
+    basis: marks.length
+      ? `Share of ${marks.length} retrieved past correction${marks.length === 1 ? "" : "s"} that reviewers marked useful on the application where it was shown. ${corrections} correction${corrections === 1 ? " is" : "s are"} stored in all.`
+      : `${corrections} correction${corrections === 1 ? "" : "s"} stored. Reviewers have not yet marked any retrieved correction as useful or not.`,
+    needs: marks.length < 10 ? "More marks: open \"past corrections on similar companies\" next to a criterion and press Useful or Not useful. About ten marks are needed before the figure means anything." : null,
   };
 }
 
@@ -179,20 +181,20 @@ export function feedbackLoop(apps: Application[]): LoopStage[] {
       built: "A reviewer corrects a score, accepts it, records a decision, or edits a drafted email.",
       count: corrections + decisions + edits, countLabel: "signals so far (corrections, decisions, email edits)", gap: null },
     { key: "capture", name: "Capture", slide: "Relevant data and observations are collected.",
-      built: "Each correction keeps the criterion, original and corrected score, a one-line reason, who, when, and tags (business type, sector).",
+      built: "Each score correction keeps the criterion, original and corrected score, a one-line reason, who, when, and tags (business type, sector). Each invitation keeps the model's first draft next to the reviewer's approved version.",
       count: corrections, countLabel: "corrections captured with a reason",
-      gap: "Email edits are logged as a fact only. The text the reviewer changed is not kept as a lesson." },
+      gap: "Edits to scores and invitations are kept. Edits to extraction output are not captured yet." },
     { key: "store", name: "Store", slide: "Collected data is indexed, organised and committed to memory.",
       built: "Applications, corrections, decisions and the audit log are kept in the database, with corrections tagged for lookup.",
       count: apps.length, countLabel: "applications in the store", gap: null },
     { key: "retrieve", name: "Retrieve", slide: "Relevant past learnings are accessed from memory.",
       built: "Past corrections on similar companies (same business type, sector, similar model score) are shown next to each criterion.",
       count: withPrecedent, countLabel: "scored applications with at least one similar past correction",
-      gap: "Retrieval is rule-based similarity and its accuracy has not been measured (step 4 above)." },
+      gap: "Retrieval is rule-based similarity. Its accuracy is measured from reviewers' useful / not useful marks (step 4 above); few marks exist so far." },
     { key: "apply", name: "Apply", slide: "Learnings are integrated to refine subsequent actions.",
-      built: "A reviewer can re-score with the similar corrections shown to the model as precedent. It is never applied automatically, because the partners said written rules become checklists.",
+      built: "A reviewer can re-score with the similar corrections shown to the model as precedent. New invitation drafts are shown the last two reviewer rewrites as wording preferences. Neither is a rule, because the partners said written rules become checklists.",
       count: applied, countLabel: "scorings that used past corrections",
-      gap: "Corrections are not yet fed into email drafting or extraction." },
+      gap: "Reviewers' invitation edits now shape later drafts as wording preferences. Corrections are not yet fed into extraction." },
     { key: "act", name: "Act", slide: "System performs an action or produces an output.",
       built: "The system scores applications and drafts invitations; a person decides and sends.",
       count: scored.length + drafts, countLabel: "outputs produced (scores and email drafts)", gap: null },

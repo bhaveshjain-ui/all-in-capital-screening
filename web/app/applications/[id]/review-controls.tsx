@@ -51,7 +51,7 @@ export function ReviewerName() {
   );
 }
 
-export interface MemoryItem { company: string; by: string; at: string; original: string; corrected: string; reason: string; reasons: string[] }
+export interface MemoryItem { correctionId: string; mark?: boolean; company: string; by: string; at: string; original: string; corrected: string; reason: string; reasons: string[] }
 
 export function CriterionReview({
   id, criterion, current, accepted, corrected, memory = [],
@@ -65,6 +65,21 @@ export function CriterionReview({
   const [verification, setVerification] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function mark(correctionId: string, useful: boolean) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/applications/${id}/memory-mark`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ correctionId, criterion, useful, by }) });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Could not save the mark.");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+      router.refresh();
+    }
+  }
 
   const needsScore = status === "scored" || status === "stated_absence";
   const numeric = score === "" ? null : Number(score);
@@ -100,11 +115,16 @@ export function CriterionReview({
         <details className="memory">
           <summary>{memory.length} past correction{memory.length > 1 ? "s" : ""} on similar companies</summary>
           <p className="small muted">Precedent, not a rule: the evidence in this application decides.</p>
-          {memory.map((m, i) => (
-            <div key={i} className="memory-item small">
+          {memory.map((m) => (
+            <div key={m.correctionId} className="memory-item small">
               <strong>{m.company}</strong>: {m.original} → {m.corrected} ({m.by}, {fmtDate(m.at)})
               <div>{m.reason}</div>
               <div className="muted">Similar because: {m.reasons.join("; ")}</div>
+              <div className="row-actions" style={{ marginTop: 4 }}>
+                <span className="muted">Useful here?</span>
+                <button type="button" className={m.mark === true ? "chip on small-btn" : "chip small-btn"} onClick={() => mark(m.correctionId, true)} disabled={busy}>Useful</button>
+                <button type="button" className={m.mark === false ? "chip on small-btn" : "chip small-btn"} onClick={() => mark(m.correctionId, false)} disabled={busy}>Not useful</button>
+              </div>
             </div>
           ))}
         </details>

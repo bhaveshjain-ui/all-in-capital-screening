@@ -138,7 +138,7 @@ export default async function EvaluationPage({ searchParams }: { searchParams: P
           <div className="notice">
             <strong>Diagnostic ladder.</strong> The overall score is the alarm
             ({live.decided ? `reviewers agreed with ${live.agreed} of ${live.decided} suggestions so far` : "no reviewer decision recorded yet"}; on the backtest the suggestion matched the fund in {steps[2].measured}% of cases).
-            The reviewers&apos; corrections are the suspect ({steps[3].n} stored). The per-step eval is the exact location
+            The reviewers&apos; corrections are the suspect ({loop[1].count} stored). The per-step eval is the exact location
             {firstGap ? `: the first step that is not yet shown to meet its target is step ${firstGap.d.n}, ${firstGap.d.name.toLowerCase()}.` : ": every step meets its target."}
           </div>
 

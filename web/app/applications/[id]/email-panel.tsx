@@ -70,12 +70,19 @@ export function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mod
         Message
         <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={frozen} rows={12} maxLength={4000} />
       </label>
-      {d.personalisation && (
+      {(d.personalisation || (d.precedentUsed && d.precedentUsed.length > 0)) && (
         <details className="small">
           <summary>Why this wording</summary>
-          <p className="muted" style={{ margin: "6px 0 0" }}>
-            The line &ldquo;{d.personalisation.sentence}&rdquo; is based on the applicant&apos;s {d.personalisation.source}: &ldquo;{d.personalisation.quote}&rdquo;
-          </p>
+          {d.personalisation && (
+            <p className="muted" style={{ margin: "6px 0 0" }}>
+              The line &ldquo;{d.personalisation.sentence}&rdquo; is based on the applicant&apos;s {d.personalisation.source}: &ldquo;{d.personalisation.quote}&rdquo;
+            </p>
+          )}
+          {d.precedentUsed && d.precedentUsed.length > 0 && (
+            <p className="muted" style={{ margin: "6px 0 0" }}>
+              Wording shaped by how reviewers rewrote earlier invitations ({d.precedentUsed.map((x) => x.company).join(", ")}).
+            </p>
+          )}
         </details>
       )}
       {d.status === "failed" && <p className="error small" role="alert">The last send failed: {d.error}</p>}

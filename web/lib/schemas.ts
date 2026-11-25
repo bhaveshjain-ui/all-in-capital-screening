@@ -298,7 +298,7 @@ export interface AuditEntry {
   type:
     | "extraction_run" | "research_planned" | "scoring_run" | "business_types_changed"
     | "criterion_accepted" | "criterion_corrected" | "decision_recorded" | "review_archived"
-    | "email_drafted" | "email_edited" | "email_approved" | "email_sent" | "email_failed" | "booking_created" | "booking_failed" | "contact_searched" | "contact_chosen" | "settings_applied";
+    | "email_drafted" | "email_edited" | "email_approved" | "email_sent" | "email_failed" | "booking_created" | "booking_failed" | "contact_searched" | "contact_chosen" | "memory_marked" | "settings_applied";
   /** "system" or the name the reviewer typed (there is no login, so this is self-declared). */
   by: string;
   detail: string;
@@ -326,6 +326,14 @@ export const EmailEditSchema = z.object({
   body: z.string().trim().min(20, "The message is too short.").max(4000),
   by: z.string().trim().max(60).optional(),
 });
+
+export interface MemoryMark {
+  correctionId: string;
+  criterion: CriterionId;
+  useful: boolean;
+  by: string;
+  at: string;
+}
 
 export interface ContactCandidate {
   email: string;
@@ -368,6 +376,10 @@ export interface EmailDraft {
   mode?: "test" | "live";
   resendId?: string | null;
   error?: string;
+  /** The model's draft as first written, kept so a reviewer's edits can be learned from later. */
+  original?: { subject: string; body: string };
+  /** Earlier reviewer edits the model was shown as wording preferences when writing this draft. */
+  precedentUsed?: { company: string; draftId: string }[];
   /** What makes the draft specific to this company, with the application text it was based on. Older drafts have none. */
   personalisation?: { sentence: string; quote: string; source: "deck" | "form" };
   /** How many model attempts passed the code checks (1 = first try). Older drafts have none. */
@@ -408,6 +420,8 @@ export interface Application {
   emails?: EmailDraft[];
   /** The point of contact found on Hunter.io, if a reviewer searched. */
   contact?: ContactResult;
+  /** Reviewers' marks on whether each retrieved past correction was useful here. */
+  memoryMarks?: MemoryMark[];
 }
 
 export interface ApplicationSummary {

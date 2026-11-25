@@ -478,7 +478,7 @@ export default async function ApplicationPage({
                               current={{ status: e.status, score: e.score }}
                               accepted={app.review?.accepted.includes(c.id) ?? false}
                               corrected={!!e.correction}
-                              memory={memory ? memory[c.id].map(toView) : []}
+                              memory={memory ? memory[c.id].map((m) => ({ ...toView(m), mark: app.memoryMarks?.find((x) => x.correctionId === m.correction.id && x.criterion === c.id)?.useful })) : []}
                             />
                           </td>
                         </tr>

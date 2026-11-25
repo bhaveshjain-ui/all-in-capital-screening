@@ -1,10 +1,13 @@
 import type { Application } from "../schemas";
 import type { Slot } from "../email/slots";
+import type { EditExample } from "../email/precedent";
 
 /** How much of the deck's opening the model may read to write something specific to this company. */
 const DECK_EXCERPT_CHARS = 1800;
 
-export function buildEmailPrompt(app: Application, slots: Slot[], attendees: string[], feedback?: string): string {
+const clip = (t: string) => (t.length > 1500 ? `${t.slice(0, 1500)}…` : t);
+
+export function buildEmailPrompt(app: Application, slots: Slot[], attendees: string[], feedback?: string, examples: EditExample[] = []): string {
   const c = app.extraction.result?.company;
   const founders = (c?.founders ?? []).filter((f) => f.name);
   const deck = app.files.find((f) => f.kind === "deck")?.text.slice(0, DECK_EXCERPT_CHARS);
@@ -29,6 +32,11 @@ ${deck ?? "(no deck was uploaded)"}
 PROPOSED SLOTS (copy each line exactly as written, one per line; each call is 30 minutes)
 ${slots.map((s) => `- ${s.label}`).join("\n")}
 
+${examples.length ? `HOW OUR REVIEWERS HAVE REWRITTEN EARLIER DRAFTS (wording preferences only)
+${examples.map((x, i) => `Example ${i + 1}\nThe model wrote:\n"""\n${clip(x.before)}\n"""\nThe reviewer approved:\n"""\n${clip(x.after)}\n"""`).join("\n\n")}
+
+Take only the style the reviewers prefer (tone, length, phrasing, sign-off). These examples are about other companies: never copy their names, facts or the company-specific sentence, and every rule below still applies.
+` : ""}
 RULES
 - Warm, brief and plain: at most about 170 words. Address the founders by first name.
 - Thank them for applying, say we would like a 30-minute conversation, and offer the slots above exactly as written. Ask them to reply with the slot that suits them, or to suggest another time if none do.

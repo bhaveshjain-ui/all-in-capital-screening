@@ -32,7 +32,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     throw e;
   }
   try {
-    await store.save(await draftInvitation(app, llm, by));
+    await store.save(await draftInvitation(app, llm, by, new Date(), undefined, await store.all()));
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof EmailStateError) return NextResponse.json({ error: e.message }, { status: 409 });

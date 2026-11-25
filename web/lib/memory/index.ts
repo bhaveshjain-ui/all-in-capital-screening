@@ -19,6 +19,7 @@ export interface MemoryMatch {
 
 /** Plain data for the page (no functions, safe to pass to client components). */
 export interface MemoryView {
+  correctionId: string;
   company: string;
   by: string;
   at: string;
@@ -95,6 +96,7 @@ export function similarCorrections(
 
 export function toView(m: MemoryMatch): MemoryView {
   return {
+    correctionId: m.correction.id,
     company: m.archived ? `${m.company} (earlier scoring)` : m.company,
     by: m.correction.by,
     at: m.correction.at,
