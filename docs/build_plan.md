@@ -78,3 +78,8 @@ Each went through extraction, four grounded research questions and scoring with 
 - **Biggest score moves:** Pumpwise +0.62 above the trial average, EarnWise -0.53, RentRoute -0.49.
 - **Criteria that move most between the live run and the trials** (mean absolute difference, scored in both): B5 why now 1.50 (only 5 cases), A3 commercial fluency 1.00, A4 team 0.85, A5 candour 0.85, B4 capital need 0.83. The most stable: A1 founder-market fit 0.20 and B1 customer evidence 0.30, the two heaviest weights.
 - **What this does and does not show:** the live model behaves like the trial scorers on these ten, and agrees most on the criteria that carry the most weight. It does not show that the scores are right: no partner has scored these applications, and there is no outcome data.
+
+## 10. Sending from a mailbox (built 2026-11-25)
+- Resend can only send from a domain the sender owns and has verified, so it cannot send as the user's school address. Sending now also works through a real mailbox over SMTP (Gmail): when `SMTP_USER` and `SMTP_PASSWORD` (a Google App Password) are set, live sends go out from that address, appear in its Sent folder, and replies land there. Without them the app falls back to Resend.
+- The From address is always the signed-in account (Gmail ignores any other). The founder's address still comes from Hunter, and every guard is unchanged: a "Take a call" decision, an approved draft, one validated recipient, 3 live emails per application, 10 a day, and no repeat to the same address within 24 hours.
+- A refused sign-in is reported as "use a 16-character App Password", and an unreachable server as "nothing was sent".

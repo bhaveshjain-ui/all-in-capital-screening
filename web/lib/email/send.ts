@@ -4,6 +4,7 @@
 
 import { createHash } from "node:crypto";
 import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { MissingConfigError } from "../llm";
 import { addAudit } from "../review";
 import { EmailEditSchema, type Application, type EmailDraft } from "../schemas";
@@ -32,12 +33,62 @@ export class ResendSender implements Sender {
   }
 }
 
-/** Live mode needs a key and a from-address; test mode needs nothing and never touches the network. */
-export function getSender(mode: SendMode, env: Record<string, string | undefined> = process.env): { sender: Sender; from: string } {
-  if (mode === "test") return { sender: { send: async () => ({ id: null }) }, from: env.RESEND_FROM_EMAIL ?? "test@localhost" };
-  if (!env.RESEND_API_KEY) throw new MissingConfigError("RESEND_API_KEY");
+/** The slice of nodemailer's transport that the sender uses, so tests can supply a fake. */
+export interface MailTransport {
+  sendMail(msg: { from: string; to: string; subject: string; text: string }): Promise<{ messageId?: string }>;
+}
+
+/**
+ * Sends through a real mailbox over SMTP (Gmail by default), so the email comes from that address and replies
+ * land in that mailbox. Gmail ignores any other From address, so `from` is always the signed-in account.
+ */
+export class SmtpSender implements Sender {
+  constructor(private transport: MailTransport) {}
+  async send(msg: OutgoingMessage) {
+    try {
+      const info = await this.transport.sendMail({ from: msg.from, to: msg.to, subject: msg.subject, text: msg.text });
+      return { id: info.messageId ?? null };
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === "EAUTH") {
+        throw new Error("Gmail refused the sign-in. Use a 16-character App Password for this account (2-step verification must be on), not the normal password.");
+      }
+      if (code === "ECONNECTION" || code === "ETIMEDOUT" || code === "ESOCKET") {
+        throw new Error("Could not reach the mail server. Nothing was sent; try again.");
+      }
+      throw e;
+    }
+  }
+}
+
+export function smtpConfigured(env: Record<string, string | undefined> = process.env): boolean {
+  return !!(env.SMTP_USER?.trim() && env.SMTP_PASSWORD?.trim());
+}
+
+export function smtpFrom(env: Record<string, string | undefined> = process.env): string {
+  const user = env.SMTP_USER!.trim();
+  const name = (env.SMTP_FROM_NAME ?? "All In Capital").replace(/["<>\r\n]/g, "").trim();
+  return name ? `${name} <${user}>` : user;
+}
+
+/**
+ * Live mode sends from the mailbox when SMTP_USER and SMTP_PASSWORD are set (an app password, never the
+ * account password), otherwise through Resend. Test mode needs nothing and never touches the network.
+ */
+export function getSender(
+  mode: SendMode,
+  env: Record<string, string | undefined> = process.env,
+  makeTransport: (opts: { host: string; port: number; secure: boolean; auth: { user: string; pass: string } }) => MailTransport = (o) => nodemailer.createTransport(o),
+): { sender: Sender; from: string; via: string } {
+  if (mode === "test") return { sender: { send: async () => ({ id: null }) }, from: env.SMTP_USER ? smtpFrom(env) : (env.RESEND_FROM_EMAIL ?? "test@localhost"), via: "test mode" };
+  if (smtpConfigured(env)) {
+    const port = Number(env.SMTP_PORT) || 465;
+    const transport = makeTransport({ host: env.SMTP_HOST?.trim() || "smtp.gmail.com", port, secure: port === 465, auth: { user: env.SMTP_USER!.trim(), pass: env.SMTP_PASSWORD!.trim() } });
+    return { sender: new SmtpSender(transport), from: smtpFrom(env), via: env.SMTP_USER!.trim() };
+  }
+  if (!env.RESEND_API_KEY) throw new MissingConfigError("SMTP_PASSWORD");
   if (!env.RESEND_FROM_EMAIL) throw new MissingConfigError("RESEND_FROM_EMAIL");
-  return { sender: new ResendSender(env.RESEND_API_KEY), from: env.RESEND_FROM_EMAIL };
+  return { sender: new ResendSender(env.RESEND_API_KEY), from: env.RESEND_FROM_EMAIL, via: "Resend" };
 }
 
 export const LIVE_SENDS_PER_APPLICATION = 3;
@@ -88,7 +139,7 @@ export function approveDraft(app: Application, draftId: string, by: string | und
   return addAudit(replace(app, next), "email_approved", who(by), `Approved for sending to ${r.address} (${mode} mode).`);
 }
 
-export interface SendDeps { mode: SendMode; sender: Sender; from: string; allApps: Application[]; now?: Date }
+export interface SendDeps { mode: SendMode; sender: Sender; from: string; via?: string; allApps: Application[]; now?: Date }
 
 /** Returns the updated application and whether it worked; failures are recorded, not thrown. */
 export async function sendDraft(app: Application, draftId: string, by: string | undefined, deps: SendDeps): Promise<{ app: Application; ok: boolean; error?: string }> {
@@ -124,7 +175,7 @@ export async function sendDraft(app: Application, draftId: string, by: string | 
     };
     return {
       ok: true,
-      app: addAudit(replace(app, next), "email_sent", who(by), live ? `Sent to ${r.address} through Resend (id ${res.id ?? "none"}).` : `Test mode: would have sent to ${r.address}. Nothing left the system.`),
+      app: addAudit(replace(app, next), "email_sent", who(by), live ? `Sent to ${r.address} from ${deps.via ?? "the mail provider"} (id ${res.id ?? "none"}).` : `Test mode: would have sent to ${r.address}. Nothing left the system.`),
     };
   } catch (e) {
     const message = (e as Error).message || "Sending failed.";
