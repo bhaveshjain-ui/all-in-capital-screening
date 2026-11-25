@@ -296,3 +296,5 @@ a.param-link:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--line
 .contact-row.chosen { border-color: var(--good); background: var(--good-soft); }
 .contact-name { font-weight: 700; }
 .contact-email { font-family: ui-monospace, Consolas, monospace; font-size: 0.92rem; word-break: break-all; }
+
+.linkbtn.disabled { opacity: 0.45; pointer-events: none; }

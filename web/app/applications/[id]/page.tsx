@@ -9,6 +9,7 @@ import { CRITERIA } from "@/lib/framework/config";
 import { effectiveCriteria, effectiveEvaluation } from "@/lib/review";
 import { memoryFor, toView } from "@/lib/memory";
 import { sendMode } from "@/lib/email/send";
+import { composeAccount, sendChannel } from "@/lib/email/channel";
 import { toDraftView } from "@/lib/emails/view";
 import { nextStep } from "@/lib/overview";
 import ContactPanel from "./contact-panel";
@@ -512,6 +513,8 @@ export default async function ApplicationPage({
             <EmailPanel
               appId={app.id}
               mode={sendMode()}
+              compose={sendMode() === "live" && sendChannel() === "compose"}
+              gmailAccount={composeAccount()}
               canInvite={decision?.value === "Take a call"}
               drafts={(app.emails ?? []).map(toDraftView)}
             />

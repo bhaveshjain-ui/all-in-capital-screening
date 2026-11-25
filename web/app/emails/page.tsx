@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DraftCard } from "../applications/[id]/email-panel";
 import { ReviewerName } from "../applications/[id]/review-controls";
 import { sendMode } from "@/lib/email/send";
+import { composeAccount, sendChannel } from "@/lib/email/channel";
 import { countByTab, listEmails, type EmailTab } from "@/lib/emails";
 import { toDraftView } from "@/lib/emails/view";
 import { allApplications } from "@/lib/store";
@@ -49,7 +50,7 @@ export default async function EmailsPage({ searchParams }: { searchParams: Promi
               <div className="email-company">{r.company}</div>
               <Link className="linkbtn small-btn" href={`/applications/${r.appId}?tab=email`}>Open the application</Link>
             </div>
-            <DraftCard key={`${r.draftId}-${r.status}-${r.to}-${r.subject.length}-${r.body.length}-${r.booking ? 1 : 0}`} appId={r.appId} d={toDraftView(r.draft)} mode={mode} />
+            <DraftCard key={`${r.draftId}-${r.status}-${r.to}-${r.subject.length}-${r.body.length}-${r.booking ? 1 : 0}`} appId={r.appId} d={toDraftView(r.draft)} mode={mode} compose={mode === "live" && sendChannel() === "compose"} gmailAccount={composeAccount()} />
           </section>
         ))
       )}

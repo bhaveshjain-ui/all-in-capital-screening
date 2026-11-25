@@ -4,7 +4,10 @@ import { CRITERIA } from "../lib/framework/config";
 import type { Llm } from "../lib/llm";
 import { MissingConfigError } from "../lib/llm";
 import { draftInvitation } from "../lib/email/draft";
-import { approveDraft, editDraft, getSender, sendDraft, SmtpSender, smtpConfigured, smtpFrom, type MailTransport } from "../lib/email/send";
+import { approveDraft, editDraft, getSender, markSentByHand, sendDraft, SmtpSender, smtpConfigured, smtpFrom, type MailTransport } from "../lib/email/send";
+import { gmailComposeUrl } from "../lib/email/compose";
+import { composeAccount, sendChannel } from "../lib/email/channel";
+import { EmailStateError } from "../lib/email/draft";
 import { proposeSlots } from "../lib/email/slots";
 import { recordDecision } from "../lib/review";
 import { scoreApplication } from "../lib/scoring/run";
@@ -126,5 +129,44 @@ describe("sending an approved invitation through the mailbox", () => {
     expect(r.ok).toBe(false);
     expect(r.error).toMatch(/App Password/);
     expect(r.app.emails![0].status).toBe("failed");
+  });
+});
+
+describe("sending by hand from Gmail", () => {
+  it("builds a Gmail compose link for the chosen account, with everything encoded", () => {
+    const url = gmailComposeUrl("bhaveshjain.work.10@gmail.com", { to: "ritu@founder.in", subject: "A & B", body: "Line one" + NL + "Line two, 100% sure?" });
+    expect(url.startsWith("https://mail.google.com/mail/u/bhaveshjain.work.10%40gmail.com/?view=cm&fs=1&")).toBe(true);
+    const q = new URL(url).searchParams;
+    expect(q.get("to")).toBe("ritu@founder.in");
+    expect(q.get("su")).toBe("A & B");
+    expect(q.get("body")).toBe("Line one" + NL + "Line two, 100% sure?");
+    expect(gmailComposeUrl(undefined, { to: "a@b.in", subject: "s", body: "b" }).startsWith("https://mail.google.com/mail/?view=cm")).toBe(true);
+  });
+  it("hands off to Gmail unless the app can really send to outsiders itself", () => {
+    expect(sendChannel({})).toBe("compose");
+    expect(sendChannel({ RESEND_API_KEY: "k", RESEND_FROM_EMAIL: "All In Capital <onboarding@resend.dev>" })).toBe("compose");
+    expect(sendChannel({ RESEND_API_KEY: "k", RESEND_FROM_EMAIL: "invites@mydomain.com" })).toBe("auto");
+    expect(sendChannel({ SMTP_USER: "a@gmail.com", SMTP_PASSWORD: "p" })).toBe("auto");
+    expect(sendChannel({ SMTP_USER: "a@gmail.com" })).toBe("compose"); // a user without a password cannot send
+    expect(composeAccount({ SMTP_USER: " a@gmail.com " })).toBe("a@gmail.com");
+    expect(composeAccount({})).toBeUndefined();
+  });
+  it("records an approved draft as sent by hand, with a plain note, and freezes it", async () => {
+    const app = await approvedApp();
+    const out = markSentByHand(app, app.emails![0].id, "Riya", NOW);
+    expect(out.emails![0]).toMatchObject({ status: "sent", mode: "live", sentAt: NOW.toISOString() });
+    expect(out.audit!.at(-1)).toMatchObject({ type: "email_sent", by: "Riya" });
+    expect(out.audit!.at(-1)!.detail).toMatch(/sent by hand from the reviewer's own mailbox/);
+    expect(() => markSentByHand(out, out.emails![0].id, "Riya")).toThrow(/already marked as sent/);
+  });
+  it("refuses an unapproved or changed draft, and a draft that needs a Take a call decision", async () => {
+    const app = await approvedApp();
+    const d = app.emails![0];
+    const edited = editDraft(app, d.id, { to: d.to, subject: d.subject, body: d.body + " P.S.", by: "Riya" }); // editing cancels the approval
+    expect(() => markSentByHand(edited, d.id, "Riya")).toThrow(/Approve the draft/);
+    const tampered = { ...app, emails: [{ ...d, body: d.body + " changed after approval" }] };
+    expect(() => markSentByHand(tampered, d.id, "Riya")).toThrow(/changed after it was approved/);
+    expect(() => markSentByHand({ ...app, review: undefined }, d.id, "Riya")).toThrow(EmailStateError);
+    expect(() => markSentByHand(app, "nope", "Riya")).toThrow(/does not exist/);
   });
 });

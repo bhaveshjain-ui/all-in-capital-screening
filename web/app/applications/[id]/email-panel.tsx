@@ -6,6 +6,7 @@ import { useReviewerName } from "./review-controls";
 import { fmtDateTime } from "@/lib/time";
 
 import type { DraftView } from "@/lib/emails/view";
+import { gmailComposeUrl } from "@/lib/email/compose";
 
 export type { DraftView };
 
@@ -23,7 +24,7 @@ const STATUS: Record<DraftView["status"], string> = {
   failed: "Sending failed",
 };
 
-export function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mode: "test" | "live" }) {
+export function DraftCard({ appId, d, mode, compose = false, gmailAccount }: { appId: string; d: DraftView; mode: "test" | "live"; compose?: boolean; gmailAccount?: string }) {
   const router = useRouter();
   const [by] = useReviewerName();
   const [to, setTo] = useState(d.to);
@@ -51,6 +52,7 @@ export function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mod
   const save = () => run(() => call(`/api/applications/${appId}/email/${d.id}`, "PATCH", { to, subject, body, by }));
   const approve = () => run(() => call(`/api/applications/${appId}/email/${d.id}/approve`, "POST", { by }));
   const send = () => run(() => call(`/api/applications/${appId}/email/${d.id}/send`, "POST", { by }));
+  const markSent = () => run(() => call(`/api/applications/${appId}/email/${d.id}/mark-sent`, "POST", { by }));
   const book = (startIso: string) => run(() => call(`/api/applications/${appId}/email/${d.id}/book`, "POST", { by, startIso }));
 
   const statusLine = `${STATUS[d.status]}${d.sentAt ? ` · ${fmtDateTime(d.sentAt)}` : ""}`;
@@ -104,14 +106,23 @@ export function DraftCard({ appId, d, mode }: { appId: string; d: DraftView; mod
         <div className="row-actions">
           <button type="button" className="secondary" onClick={save} disabled={busy || !dirty}>Save</button>
           <button type="button" onClick={approve} disabled={busy || dirty || d.status === "approved" || !d.to}>Approve</button>
-          <button type="button" onClick={send} disabled={busy || dirty || !(d.status === "approved" || d.status === "failed")}>Send</button>
+          {compose ? (
+            <>
+              <a className={d.status === "approved" && !dirty ? "linkbtn" : "linkbtn disabled"} href={d.status === "approved" && !dirty ? gmailComposeUrl(gmailAccount, d) : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!(d.status === "approved" && !dirty)}>
+                Open in Gmail
+              </a>
+              <button type="button" onClick={markSent} disabled={busy || dirty || d.status !== "approved"}>I sent it</button>
+            </>
+          ) : (
+            <button type="button" onClick={send} disabled={busy || dirty || !(d.status === "approved" || d.status === "failed")}>Send</button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-export default function EmailPanel({ appId, mode, drafts, canInvite }: { appId: string; mode: "test" | "live"; drafts: DraftView[]; canInvite: boolean }) {
+export default function EmailPanel({ appId, mode, drafts, canInvite, compose = false, gmailAccount }: { appId: string; mode: "test" | "live"; drafts: DraftView[]; canInvite: boolean; compose?: boolean; gmailAccount?: string }) {
   const router = useRouter();
   const [by] = useReviewerName();
   const [busy, setBusy] = useState(false);
@@ -140,7 +151,7 @@ export default function EmailPanel({ appId, mode, drafts, canInvite }: { appId: 
           {error && <p className="error pre-line" role="alert">{error}</p>}
         </>
       )}
-      {drafts.map((d) => <DraftCard key={`${d.id}-${d.status}-${d.to}-${d.subject.length}-${d.body.length}`} appId={appId} d={d} mode={mode} />)}
+      {drafts.map((d) => <DraftCard key={`${d.id}-${d.status}-${d.to}-${d.subject.length}-${d.body.length}`} appId={appId} d={d} mode={mode} compose={compose} gmailAccount={gmailAccount} />)}
     </div>
   );
 }

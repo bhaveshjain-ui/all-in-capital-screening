@@ -139,6 +139,22 @@ export function approveDraft(app: Application, draftId: string, by: string | und
   return addAudit(replace(app, next), "email_approved", who(by), `Approved for sending to ${r.address} (${mode} mode).`);
 }
 
+/**
+ * Records an approved invitation as sent after a person sent it from their own mailbox. The text must be the
+ * approved text, to a valid address, so the record matches what was reviewed.
+ */
+export function markSentByHand(app: Application, draftId: string, by: string | undefined, now = new Date()): Application {
+  requireTakeACall(app);
+  const d = find(app, draftId);
+  if (d.status === "sent" || d.status === "test_logged") throw new EmailStateError("This email is already marked as sent.");
+  if (!d.approvedHash || d.status !== "approved") throw new EmailStateError("Approve the draft before marking it as sent.");
+  if (d.approvedHash !== hashDraft(d)) throw new EmailStateError("The draft changed after it was approved. Approve it again.");
+  const r = checkRecipient(d.to, true);
+  if (!r.ok) throw new EmailStateError(r.error);
+  const next: EmailDraft = { ...d, status: "sent", mode: "live", sentAt: now.toISOString(), resendId: null, error: undefined };
+  return addAudit(replace(app, next), "email_sent", who(by), `Marked as sent to ${r.address}. It was sent by hand from the reviewer's own mailbox, outside the app.`);
+}
+
 export interface SendDeps { mode: SendMode; sender: Sender; from: string; via?: string; allApps: Application[]; now?: Date }
 
 /** Returns the updated application and whether it worked; failures are recorded, not thrown. */
